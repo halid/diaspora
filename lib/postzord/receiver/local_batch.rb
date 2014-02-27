@@ -32,9 +32,9 @@ class Postzord::Receiver::LocalBatch < Postzord::Receiver
   # NOTE(copied over from receiver public)
   # @return [Object]
   def receive_relayable
-    if @object.parent.author.local?
+    if @object.parent_author.local?
       # receive relayable object only for the owner of the parent object
-      @object.receive(@object.parent.author.owner)
+      @object.receive(@object.parent_author.owner)
     end
     @object
   end
@@ -60,7 +60,7 @@ class Postzord::Receiver::LocalBatch < Postzord::Receiver
   # return [void]
   def notify_users
     return unless @object.respond_to?(:notification_type)
-    @users.each do |user|
+    @users.find_each do |user|
       Notification.notify(user, @object, @object.author)
     end
   end

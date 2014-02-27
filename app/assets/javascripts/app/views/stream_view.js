@@ -1,4 +1,8 @@
-app.views.Stream = app.views.InfScroll.extend({
+//= require ./stream/shortcuts
+
+app.views.Stream = app.views.InfScroll.extend(_.extend(
+  app.views.StreamShortcuts, {
+  	
   initialize: function(options) {
     this.stream = this.model
     this.collection = this.stream.items
@@ -8,6 +12,8 @@ app.views.Stream = app.views.InfScroll.extend({
     this.setupNSFW()
     this.setupLightbox()
     this.setupInfiniteScroll()
+    this.setupShortcuts()
+    this.markNavSelected()
   },
 
   postClass : app.views.StreamPost,
@@ -23,5 +29,12 @@ app.views.Stream = app.views.InfScroll.extend({
     function reRenderPostViews() {
       _.map(this.postViews, function(view){ view.render() })
     }
+  },
+
+  markNavSelected : function() {
+    var activeStream = Backbone.history.fragment;
+    var streamSelection = $("#stream_selection");
+    streamSelection.find("[data-stream]").removeClass("selected");
+    streamSelection.find("[data-stream='" + activeStream + "']").addClass("selected");
   }
-});
+}));

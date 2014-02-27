@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -7,6 +7,8 @@
 ro:
   _applications: "Aplicaţii"
   _comments: "Comentarii"
+  _contacts: "contacte"
+  _help: "Ajutor"
   _home: "Acasă"
   _photos: "Fotografii"
   _services: "Servicii"
@@ -39,6 +41,7 @@ ro:
             username:
               invalid: "is invalid. We only allow letters, numbers, and underscores"
               taken: "este deja folosit de cineva."
+  ago: "%{time} în urmă"
   all_aspects: "All aspects"
   application:
     helper:
@@ -46,10 +49,12 @@ ro:
       video_title:
         unknown: "Titlu necunoscut"
   are_you_sure: "Eşti sigur?"
+  are_you_sure_delete_account: "Ești sigur(ă) că vrei sa închizi contul? Acest lucru nu poate fi refăcut!"
   aspect_memberships:
     destroy:
       failure: "Nu s-a reusit mutarea persoanei din acel aspect"
       no_membership: "Nu s-a gasit pesoana in aspectul cautat"
+      success: "Persoana a fost îndepărtată cu succes din ipostază."
   aspects:
     add_to_aspect:
       failure: "Nu s-a reuşit adăuga contactul la aspect."
@@ -58,6 +63,12 @@ ro:
       done_editing: "terminat de editat"
     aspect_listings:
       add_an_aspect: "+ Adaugă un aspect"
+      deselect_all: "Deselectează tot"
+      edit_aspect: "Modifică %{name}"
+      select_all: "Selectare tot"
+    aspect_stream:
+      stay_updated: "Rămâi la curent"
+      stay_updated_explanation: "Fluxul tău de date este populat cu toate contactele tale, toate etichetele pe care le urmărești și articolele publicate de unii membri creativi ai comunității."
     contacts_not_visible: "Contactele din acest aspect nu vor putea sa se vada intre ele."
     contacts_visible: "Contactele din acest aspect se vor putea vedea intre ele."
     create:
@@ -83,19 +94,41 @@ ro:
       aspect_not_empty: "Aspectul nu este gol"
       remove: "şterge"
     index:
+      cubbies:
+        explanation: "Cubbi.es este prima aplicație Diaspora în dezvoltare"
+        heading: "Conectarea la Cubbi.es"
+        learn_more: "Află mai multe"
       diaspora_id:
         content_1: "ID-ul tău Diaspora este:"
+        content_2: "Transmite-l tuturor și ei vor putea să te găsească pe Diaspora."
+        heading: "Identificatorul tău pe Diaspora"
       donate: "Donează"
       handle_explanation: "This is your diaspora handle.  Like an email address, you can give this to people to reach you."
       help:
+        do_you: "Tu"
+        email_feedback: "%{link} feedback-ul tău, dacă preferi."
+        feature_suggestion: "ai o sugestie de %{link}?"
+        find_a_bug: "cauti un %{link}?"
+        have_a_question: "ai un %{link}?"
         here_to_help: "Diaspora community is here to help!"
+        need_help: "Ai nevoie de ajutor?"
         tag_bug: "#bug"
         tag_feature: "#feature"
         tag_question: "#question"
+      introduce_yourself: "Acesta este fluxul tău. Fă-ți prezentarea."
+      new_here:
+        follow: "Urmează legătura %{link} si urează-le bun venit noilor utilizatori in comunitatea Diaspora"
+        learn_more: "Află mai multe"
+        title: "Bun venit noilor utilizatori"
       no_contacts: "Niciun contact"
       no_tags: "No tags"
+      people_sharing_with_you: "Cunoscuți care partajează cu tine"
       post_a_message: "publicati un mesaj >>"
+      services:
+        content: "Te poți conecta la următoarele servicii pe Diaspora"
+        heading: "Conectează servciii"
       unfollow_tag: "Nu mai urma #%{tag}"
+      welcome_to_diaspora: "%{name}, bun venit in comunitatea Diaspora"
     many: "%{count} aspecte"
     move_contact:
       error: "Eroare la mutarea contactului: %{inspect}"
@@ -105,21 +138,29 @@ ro:
       create: "Crează"
       name: "Name"
     no_contacts_message:
+      community_spotlight: "reflectorul comunității"
+      or_spotlight: "Sau poți partaja cu %{link}"
       try_adding_some_more_contacts: "You can search (top) or invite (right) more contacts."
+      you_should_add_some_more_contacts: "Ar trebui sa mai adaugi noi persoane de contact!"
     no_posts_message:
       start_talking: "Nimeni nu a spus nimic deocamdată."
     one: "1 aspect"
     other: "%{count} aspecte"
     seed:
+      acquaintances: "Cunoscuții"
       family: "Familie"
       friends: "Prieteni"
       work: "Lucru"
     selected_contacts:
+      manage_your_aspects: "Gestionează aspectele tale personale"
+      no_contacts: "Nu aveți incă nici o persoană de contact."
+      view_all_community_spotlight: "Vizualizează toate reflectoarele comunității"
       view_all_contacts: "Vezi toate contactele"
     show:
       edit_aspect: "Editează aspect"
     two: "%{count} aspects"
     update:
+      failure: "Apectul tău, %{name}, are numele prea lung ca să fie salvat"
       success: "Aspectul, %{name}, a fost editat cu succes."
     zero: "niciun aspect"
   back: "Înapoi"
@@ -146,14 +187,23 @@ ro:
     index:
       add_a_new_aspect: "Adaugă un aspect nou"
       add_to_aspect: "Add contacts to %{name}"
+      add_to_aspect_link: "Adaugă contacte la %{name}"
       all_contacts: "Toate contactele"
+      community_spotlight: "reflectorul comunității"
       my_contacts: "Contactele mele"
       no_contacts: "No contacts."
+      no_contacts_message: "Verifică %{community_spotlight}"
+      only_sharing_with_me: "Partajat doar cu mine"
+      start_a_conversation: "Începe o conversație."
       title: "Contacte"
       your_contacts: "Contactele Tale"
     many: "%{count} contacte"
     one: "1 contact"
     other: "%{count} contacte"
+    sharing:
+      people_sharing: "Cunoscuți care partajează cu tine"
+    spotlight:
+      community_spotlight: "reflectorul comunității"
     two: "%{count} contacts"
     zero: "contacte"
   conversations:
@@ -177,6 +227,7 @@ ro:
       no_conversation_selected: "nicio conversaţie selectată"
       no_messages: "niciun mesaj"
     new:
+      abandon_changes: "Abandonezi schimbările?"
       send: "Trimite"
       sending: "Trimitere..."
       subject: "subiect"
@@ -184,6 +235,11 @@ ro:
     show:
       delete: "sterge si blocheaza conversatia"
       reply: "raspunde"
+  date:
+    formats:
+      birthday: "%B %d"
+      birthday_with_year: "%B %d %Y"
+      fullmonth_day: "%B %d"
   delete: "Şterge"
   email: "E-mail"
   error_messages:
@@ -192,6 +248,8 @@ ro:
       invalid_fields: "Câmpuri invalide"
   fill_me_out: "Umple-mă"
   find_people: "Find people"
+  help:
+    wiki: "Wiki"
   hide: "Ascunde"
   invitations:
     a_facebook_user: "Un utilizator Facebook"
@@ -203,10 +261,13 @@ ro:
       no_more: "Nu mai dispui de invitaţii."
       rejected: "Urmatoarele adrese de email au prezentat probleme:"
       sent: "Invitaţia dvs. a fost trimisă."
+    edit:
+      accept_your_invitation: "Acceptă invitaţia"
     new:
       already_invited: "Deja invitat "
       if_they_accept_info: "în cazul în care acceptă, vor fi adăugate la aspectul la care le-ai invitat."
       invite_someone_to_join: "Invită pe cineva pe Diaspora!"
+      language: "Limbă"
       personal_message: "Mesaj personal"
       resend: "Mai trimite odata"
       send_an_invitation: "Trimite o invitaţie"
@@ -214,10 +275,13 @@ ro:
       to: "Pentru"
   layouts:
     application:
+      back_to_top: "Înapoi la începutul paginii"
       toggle: "toggle mobile site"
       whats_new: "ce mai e nou?"
       your_aspects: "aspectele tale"
     header:
+      admin: "Administrare"
+      blog: "Blog"
       code: "codul"
       login: "login"
       logout: "Ieşire"
@@ -361,11 +425,13 @@ ro:
     hello: "Bună %{name}!"
     liked:
       liked: "%{name} ia placut publicatia ta"
+      view_post: "Vezi articolul"
     mentioned:
       mentioned: "te-a menţionat întrun post:  "
       subject: "%{name} te-a menţionat pe Diaspora*"
     reshared:
       reshared: "%{name} just reshared your post"
+      view_post: "Vezi articolul"
     single_admin:
       admin: "Administratorul  local de Diaspora"
       subject: "A message from your Diaspora administrator:"
@@ -375,6 +441,8 @@ ro:
       view_profile: "Vezi profilul lui %{name}"
     thanks: "Mulţumim,"
     to_change_your_notification_settings: "pentru a schimba setăriile notificărilor"
+  nsfw: "NSFW"
+  ok: "Ok"
   or: "sau"
   password: "Parola"
   password_confirmation: "Confirmă parola"
@@ -422,6 +490,7 @@ ro:
       see_all: "Vezi tot"
       to_accept_or_ignore: "pentru acceptare / ignorare."
     sub_header:
+      add_some: "Adaugă pe cineva"
       edit: "editare"
       you_have_no_tags: "nu aveti nici un marcaj!"
     two: "%{count} people"
@@ -460,6 +529,8 @@ ro:
       error: "Nu s-a reuşit editarea fotografiii."
       notice: "Fotografia a fost actualizată cu succes."
   posts:
+    presenter:
+      title: "Un articol de la %{name}"
     show:
       destroy: "Şterge"
       not_found: "Ne pare rau, dar nu am gasit publicatia."
@@ -471,6 +542,8 @@ ro:
         two: "Two photos by %{author}"
         zero: "No photos by %{author}"
   previous: "anterioare"
+  privacy: "Confidențialitate"
+  privacy_policy: "Politica de Confidenţialitate"
   profile: "Profil"
   profiles:
     edit:
@@ -479,6 +552,7 @@ ro:
       first_name: "Numele mic"
       last_name: "Numele de familie"
       update_profile: "Actualizează Profil"
+      your_bio: "Despre tine"
       your_birthday: "Ziua ta de naştere"
       your_gender: "Sexul tău"
       your_location: "Locaţia dvs"
@@ -491,6 +565,7 @@ ro:
     update:
       failed: "Eşuare la actualizarea profilului"
       updated: "Profil updatat"
+  public: "Public"
   reactions:
     few: "%{count} reactions"
     many: "%{count} reactions"
@@ -552,6 +627,7 @@ ro:
   search: "Caută"
   services:
     create:
+      failure: "Autentificarea a eşuat."
       success: "Autentificare cu succes."
     destroy:
       success: "Successfully destroyed authentication."
@@ -591,6 +667,8 @@ ro:
         zero: "Add to aspect"
     contact_list:
       all_contacts: "Toate contactele"
+    footer:
+      logged_in_as: "Autentificat ca %{name}"
     invitations:
       by_email: "prin e-mail"
       dont_have_now: "Nu aveti nici una momentan, insa o sa primiti invitatii noi in curand!"
@@ -603,9 +681,11 @@ ro:
     notification:
       new: "O noua %{type} de la %{from}"
     public_explain:
+      atom_feed: "Afișare feed RSS și Atom"
       logged_in: "autentificat pe %{service}"
       manage: "gestionează serviciile la care eşti conectat"
       outside: "Mesajele publice vor fi disponibile pentru cei ce nu fac parte din Diaspora."
+      share: "Distribuie"
       title: "Sunteţi pe cale de a publica un mesaj public!"
     publisher:
       all: "toate"
@@ -618,6 +698,7 @@ ro:
       posting: "Publicare..."
       share: "Distribuie"
       share_with: "Share with %{aspect}"
+      upload_photos: "Încarcă fotografii"
       whats_on_your_mind: "what's on your mind?"
     reshare:
       reshare: "Redistribuie"
@@ -649,10 +730,19 @@ ro:
       two: "Show two more comments"
       zero: "No more comments"
   streams:
+    activity:
+      title: "Activitatea proprie"
     aspects:
       title: "Your Aspects"
+    followed_tag:
+      add_a_tag: "Adaugă un tag"
+      follow: "Urmează"
     mentions:
       title: "Your Mentions"
+    multi:
+      title: "Flux"
+    public:
+      title: "Activitate publică"
     tags:
       contacts_title: "People who dig these tags"
   tag_followings:
@@ -670,6 +760,7 @@ ro:
       people_tagged_with: "Persoane marcate cu %{tag}"
       posts_tagged_with: "Publicatii marcate cu #%{tag}"
       stop_following: "Nu mai urmari #%{tag}"
+  terms_and_conditions: "Termeni și Condiții de utilizare:"
   tokens:
     show:
       connect_to_cubbies: "Conectarea la Cubbi.es"
@@ -692,6 +783,7 @@ ro:
       change_password: "Modificare parolă"
       close_account:
         what_we_delete: "We delete all of your posts, profile data, as soon as humanly possible. Your comments will hang around, but be associated with your Diaspora Handle."
+      close_account_text: "Închide cont"
       comment_on_post: "...cineva comenteaza pe o publicatie proprie?"
       current_password: "Parola curentă"
       download_photos: "descarcă fotografiile mele"
@@ -704,10 +796,11 @@ ro:
       new_password: "Parolă nouă"
       private_message: "...primesti un mesaj privat?"
       receive_email_notifications: "Receive email notificaions?"
+      stream_preferences: "Preferințe flux"
       your_email: "E-mailul tău"
       your_handle: "Identificatorul tău pe Diaspora"
     getting_started:
-      what_facebook_does: "to Diaspora. This will pull your name and photo, and enable cross-positng."
+      well_hello_there: "Bun venit"
     public:
       does_not_exist: "Utilizatorul %{username} nu există!"
     update:
@@ -724,3 +817,7 @@ ro:
     no_person_constructed: "Nu sa putut indentifica nici o persoana prin acest hcard."
     not_enabled: "webfinger nu pare sa fie activat pentru locatia %{account}"
     xrd_fetch_failed: "s-a semnalat o eroare la extragerea xrd de la contul %{account}"
+  welcome: "Bine ai venit,"
+  will_paginate:
+    next_label: "Pagina Următore &raquo;"
+    previous_label: "&laquo; Pagina Precedentă"

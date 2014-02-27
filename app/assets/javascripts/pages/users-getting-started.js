@@ -7,8 +7,6 @@ Diaspora.Pages.UsersGettingStarted = function() {
 
     $('#edit_profile').bind('ajax:success', function(evt, data, status, xhr){
       $('#gs-name-form-spinner').addClass("hidden");
-      $('.profile .saved').show();
-      $('.profile .saved').fadeOut(2000);
     });
 
     // It seems that the default behavior of rails ujs is to clear the remote form
@@ -36,37 +34,40 @@ Diaspora.Pages.UsersGettingStarted = function() {
     });
 
     $("#awesome_button").bind("click", function(evt){
-      evt.preventDefault();
-
       var confirmMessage = Diaspora.I18n.t("getting_started.no_tags");
+      var message = Diaspora.I18n.t("getting_started.preparing_your_stream");
+      var confirmation = true;
 
-      if(($("#as-selections-tags").find(".as-selection-item").length > 0) || confirm(confirmMessage)) {
-        $('.tag_input').submit();
-
-        /* flash message prompt */
-        var message = Diaspora.I18n.t("getting_started.preparing_your_stream");
-        Diaspora.page.flashMessages.render({success: true, notice: message});
-      } else {
-        /* flash message prompt */
-        var message = Diaspora.I18n.t("getting_started.alright_ill_wait");
-        Diaspora.page.flashMessages.render({success: true, notice: message});
+      if ($("#as-selections-tags").find(".as-selection-item").length <= 0) {
+        message = Diaspora.I18n.t("getting_started.alright_ill_wait");
+        confirmation = confirm(confirmMessage);
       }
+
+      Diaspora.page.flashMessages.render({success: true, notice: message});
+      return confirmation;
     });
 
     /* ------ */
     var autocompleteInput = $("#follow_tags");
+    var tagFollowings = new app.collections.TagFollowings();
 
     autocompleteInput.autoSuggest("/tags", {
       selectedItemProp: "name",
+      selectedValuesProp: "name",
       searchObjProps: "name",
       asHtmlID: "tags",
       neverSubmit: true,
-      retriveLimit: 10,
+      retrieveLimit: 10,
       selectionLimit: false,
       minChars: 2,
       keyDelay: 200,
       startText: "",
-      emptyText: "no_results"
+      emptyText: "no_results",
+      selectionAdded: function(elem){tagFollowings.create({"name":$(elem[0]).text().substring(2)})},
+      selectionRemoved: function(elem){ 
+        tagFollowings.where({"name":$(elem[0]).text().substring(2)})[0].destroy();
+        elem.remove();
+      }
       });
 
     autocompleteInput.bind('keydown', function(evt){

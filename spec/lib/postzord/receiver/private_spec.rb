@@ -4,9 +4,6 @@
 
 require 'spec_helper'
 
-require File.join(Rails.root, 'lib/postzord')
-require File.join(Rails.root, 'lib/postzord/receiver/private')
-
 describe Postzord::Receiver::Private do
 
   before do
@@ -26,12 +23,12 @@ describe Postzord::Receiver::Private do
     end
 
     it 'valid for remote' do
-      salmon_mock = mock()
-      web_mock = mock()
-      web_mock.should_receive(:fetch).and_return true
-      salmon_mock.should_receive(:author_id).and_return(true)
-      Salmon::EncryptedSlap.should_receive(:from_xml).with(@salmon_xml, bob).and_return(salmon_mock)
-      Webfinger.should_receive(:new).and_return(web_mock)
+      salmon_double = double()
+      web_double = double()
+      web_double.should_receive(:fetch).and_return true
+      salmon_double.should_receive(:author_id).and_return(true)
+      Salmon::EncryptedSlap.should_receive(:from_xml).with(@salmon_xml, bob).and_return(salmon_double)
+      Webfinger.should_receive(:new).and_return(web_double)
 
       zord = Postzord::Receiver::Private.new(bob, :salmon_xml => @salmon_xml)
       zord.instance_variable_get(:@user).should_not be_nil
@@ -53,7 +50,7 @@ describe Postzord::Receiver::Private do
       end
 
       it 'if the author does not match the signature' do
-        @zord.instance_variable_set(:@sender, Factory(:person))
+        @zord.instance_variable_set(:@sender, FactoryGirl.create(:person))
         @zord.receive!.should == false
       end
     end

@@ -5,13 +5,13 @@
 require 'spec_helper'
 
 describe Webfinger do
-  let(:host_meta_xrd) { File.open(File.join(Rails.root, 'spec', 'fixtures', 'host-meta.fixture.html')).read }
-  let(:webfinger_xrd) { File.open(File.join(Rails.root, 'spec', 'fixtures', 'webfinger.fixture.html')).read }
-  let(:hcard_xml) { File.open(File.join(Rails.root, 'spec', 'fixtures', 'hcard.fixture.html')).read }
+  let(:host_meta_xrd) { File.open(Rails.root.join('spec', 'fixtures', 'host-meta.fixture.html')).read }
+  let(:webfinger_xrd) { File.open(Rails.root.join('spec', 'fixtures', 'webfinger.fixture.html')).read }
+  let(:hcard_xml) { File.open(Rails.root.join('spec', 'fixtures', 'hcard.fixture.html')).read }
   let(:account){'foo@bar.com'}
   let(:account_in_fixtures){"alice@localhost:9887"}
   let(:finger){Webfinger.new(account)}
-  let(:host_meta_url){"http://#{AppConfig[:pod_uri].authority}/webfinger?q="}
+  let(:host_meta_url){"http://#{AppConfig.pod_uri.authority}/webfinger?q="}
 
   describe '#intialize' do
     it 'sets account ' do
@@ -31,8 +31,8 @@ describe Webfinger do
   end
 
   describe '.in_background' do
-    it 'enqueues a Jobs::FetchWebfinger job' do
-      Resque.should_receive(:enqueue).with(Jobs::FetchWebfinger, account)
+    it 'enqueues a Workers::FetchWebfinger job' do
+      Workers::FetchWebfinger.should_receive(:perform_async).with(account)
       Webfinger.in_background(account)
     end
   end
@@ -85,7 +85,7 @@ describe Webfinger do
 
   describe 'existing_person_with_profile?' do
     it 'returns true if cached_person is present and has a profile' do
-      finger.should_receive(:cached_person).twice.and_return(Factory(:person))
+      finger.should_receive(:cached_person).twice.and_return(FactoryGirl.create(:person))
       finger.existing_person_with_profile?.should be_true
     end
 
@@ -95,7 +95,7 @@ describe Webfinger do
     end
 
     it 'returns false if the person has no profile' do
-      p = Factory(:person)
+      p = FactoryGirl.create(:person)
       p.profile = nil
       finger.stub(:cached_person).and_return(p)
       finger.existing_person_with_profile?.should be_false
@@ -104,7 +104,7 @@ describe Webfinger do
 
   describe 'cached_person' do
     it 'sets the person by looking up the account from Person.by_account_identifier' do
-      person = stub
+      person = double
       Person.should_receive(:by_account_identifier).with(account).and_return(person)
       finger.cached_person.should == person
       finger.person.should == person

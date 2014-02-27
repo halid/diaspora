@@ -66,7 +66,7 @@ describe User::Querying do
     it "does not contain duplicate posts" do
       bobs_other_aspect = bob.aspects.create(:name => "cat people")
       bob.add_contact_to_aspect(bob.contact_for(alice.person), bobs_other_aspect)
-      bob.aspects_with_person(alice.person).should =~ [@bobs_aspect, bobs_other_aspect]
+      expect(bob.aspects_with_person(alice.person)).to match_array [@bobs_aspect, bobs_other_aspect]
 
       bobs_post = bob.post(:status_message, :text => "hai to all my people", :to => [@bobs_aspect.id, bobs_other_aspect.id])
 
@@ -110,10 +110,10 @@ describe User::Querying do
 
   describe "#visible_shareables" do
     it 'never contains posts from people not in your aspects' do
-      Factory(:status_message, :public => true)
+      FactoryGirl.create(:status_message, :public => true)
       bob.visible_shareables(Post).count.should == 0
     end
-    
+
     context 'with two posts with the same timestamp' do
       before do
         aspect_id = alice.aspects.where(:name => "generic").first.id
@@ -122,7 +122,7 @@ describe User::Querying do
           alice.post :status_message, :text => "second", :to => aspect_id
         end
       end
-      
+
       it "returns them in reverse creation order" do
         bob.visible_shareables(Post).first.text.should == "second"
         bob.visible_shareables(Post).last.text.should == "first"
@@ -203,9 +203,9 @@ describe User::Querying do
       end
 
       it 'returns local/remote people objects for a users contact in each aspect' do
-        local_user1 = Factory(:user)
-        local_user2 = Factory(:user)
-        remote_user = Factory(:user)
+        local_user1 = FactoryGirl.create(:user)
+        local_user2 = FactoryGirl.create(:user)
+        remote_user = FactoryGirl.create(:user)
 
         asp1 = local_user1.aspects.create(:name => "lol")
         asp2 = local_user2.aspects.create(:name => "brb")
@@ -226,7 +226,7 @@ describe User::Querying do
       end
 
       it 'does not return people not connected to user on same pod' do
-        3.times { Factory(:user) }
+        3.times { FactoryGirl.create(:user) }
         alice.people_in_aspects([@alices_aspect]).count.should == 1
       end
 
@@ -241,9 +241,9 @@ describe User::Querying do
   end
 
   context 'contact querying' do
-    let(:person_one) { Factory :person }
-    let(:person_two) { Factory :person }
-    let(:person_three) { Factory :person }
+    let(:person_one) { FactoryGirl.create :person }
+    let(:person_two) { FactoryGirl.create :person }
+    let(:person_three) { FactoryGirl.create :person }
     let(:aspect) { alice.aspects.create(:name => 'heroes') }
 
     describe '#contact_for_person_id' do
@@ -309,7 +309,7 @@ describe User::Querying do
 
   describe '#posts_from' do
     before do
-      @user3 = Factory(:user)
+      @user3 = FactoryGirl.create(:user)
       @aspect3 = @user3.aspects.create(:name => "bros")
 
       @public_message = @user3.post(:status_message, :text => "hey there", :to => 'all', :public => true)

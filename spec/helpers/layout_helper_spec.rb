@@ -5,21 +5,10 @@
 require 'spec_helper'
 
 describe LayoutHelper do
-  include ApplicationHelper
-  before do
-    @user = alice
-  end
-
   describe "#page_title" do
-    before do
-      def current_user
-        @current_user
-      end
-    end
-
     context "passed blank text" do
       it "returns Diaspora*" do
-        page_title.should == pod_name
+        page_title.to_s.should == pod_name
       end
     end
 

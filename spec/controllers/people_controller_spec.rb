@@ -13,10 +13,10 @@ describe PeopleController do
 
   describe '#index (search)' do
     before do
-      @eugene = Factory(:person,
-                        :profile => Factory.build(:profile, :first_name => "Eugene", :last_name => "w"))
-      @korth = Factory(:person,
-                       :profile => Factory.build(:profile, :first_name => "Evan", :last_name => "Korth"))
+      @eugene = FactoryGirl.create(:person,
+                        :profile => FactoryGirl.build(:profile, :first_name => "Eugene", :last_name => "w"))
+      @korth = FactoryGirl.create(:person,
+                       :profile => FactoryGirl.build(:profile, :first_name => "Evan", :last_name => "Korth"))
     end
 
     describe 'via json' do
@@ -39,8 +39,8 @@ describe PeopleController do
     describe 'via html' do
       context 'query is a diaspora ID' do
         before do
-          @unsearchable_eugene = Factory(:person, :diaspora_handle => "eugene@example.org",
-                                         :profile => Factory.build(:profile, :first_name => "Eugene",
+          @unsearchable_eugene = FactoryGirl.create(:person, :diaspora_handle => "eugene@example.org",
+                                         :profile => FactoryGirl.build(:profile, :first_name => "Eugene",
                                                                    :last_name => "w", :searchable => false))
         end
         it 'finds people even if they have searchable off' do
@@ -64,23 +64,6 @@ describe PeopleController do
         end
       end
 
-      context 'query is a tag' do
-        it 'goes to a tag page' do
-          get :index, :q => '#babies'
-          response.should redirect_to(tag_path('babies', :q => '#babies'))
-        end
-
-        it 'removes dots from the query' do
-          get :index, :q => '#babi.es'
-          response.should redirect_to(tag_path('babies', :q => '#babi.es'))
-        end
-
-        it 'stay on the page if you search for the empty hash' do
-          get :index, :q => '#'
-          flash[:error].should be_present
-        end
-      end
-
       context 'query is not a tag or a diaspora ID' do
         it 'assigns hashes' do
           get :index, :q => "Korth"
@@ -93,8 +76,8 @@ describe PeopleController do
         end
 
         it "assigns people" do
-          eugene2 = Factory(:person,
-                            :profile => Factory.build(:profile, :first_name => "Eugene",
+          eugene2 = FactoryGirl.create(:person,
+                            :profile => FactoryGirl.build(:profile, :first_name => "Eugene",
                                                       :last_name => "w"))
           get :index, :q => "Eug"
           assigns[:people].map { |x| x.id }.should =~ [@eugene.id, eugene2.id]
@@ -123,8 +106,8 @@ describe PeopleController do
         end
 
         it "excludes people who have searchable off" do
-          eugene2 = Factory(:person,
-                            :profile => Factory.build(:profile, :first_name => "Eugene",
+          eugene2 = FactoryGirl.create(:person,
+                            :profile => FactoryGirl.build(:profile, :first_name => "Eugene",
                                                       :last_name => "w", :searchable => false))
           get :index, :q => "Eug"
           assigns[:people].should_not =~ [eugene2]
@@ -140,7 +123,7 @@ describe PeopleController do
     end
 
     it 'returns awesome people who have that tag' do
-      f = Factory(:person)
+      f = FactoryGirl.create(:person)
       f.profile.tag_string = "#seeded"
       f.profile.save
       get :tag_index, :name => 'seeded', :format => :js
@@ -154,7 +137,7 @@ describe PeopleController do
       @posts = []
       @users = []
       8.times do |n|
-        user = Factory(:user)
+        user = FactoryGirl.create(:user)
         @users << user
         aspect = user.aspects.create(:name => 'people')
         connect_users(@user, @user.aspects.first, user, aspect)
@@ -192,7 +175,7 @@ describe PeopleController do
     end
 
     it 'redirects home for closed account' do
-      @person = Factory(:person, :closed_account => true)
+      @person = FactoryGirl.create(:person, :closed_account => true)
       get :show, :id => @person.to_param
       response.should be_redirect
       flash[:notice].should_not be_blank
@@ -201,13 +184,22 @@ describe PeopleController do
     it 'does not allow xss attacks' do
       user2 = bob
       profile = user2.profile
-      profile.first_name = "<script> alert('xss attack');</script>"
-      profile.save
+      profile.update_attribute(:first_name, "</script><script> alert('xss attack');</script>")
       get :show, :id => user2.person.to_param
       response.should be_success
-      response.body.match(profile.first_name).should be_false
+      response.body.should_not include(profile.first_name)
     end
 
+    it "doesn't leak photos in the sidebar" do
+      private_photo = @user.post(:photo, user_file: uploaded_photo, to: @aspect.id, public: false)
+      public_photo = @user.post(:photo, user_file: uploaded_photo, to: @aspect.id, public: true)
+
+      sign_out :user
+      get :show, id: @user.person.to_param
+
+      assigns(:photos).should_not include private_photo
+      assigns(:photos).should include public_photo
+    end
 
     context "when the person is the current user" do
       it "succeeds" do
@@ -271,7 +263,7 @@ describe PeopleController do
         end
 
         it "posts include reshares" do
-          reshare = @user.post(:reshare, :public => true, :root_guid => Factory(:status_message, :public => true).guid, :to => alice.aspects)
+          reshare = @user.post(:reshare, :public => true, :root_guid => FactoryGirl.create(:status_message, :public => true).guid, :to => alice.aspects)
           get :show, :id => @user.person.to_param
           assigns[:stream].posts.map { |x| x.id }.should include(reshare.id)
         end
@@ -287,11 +279,12 @@ describe PeopleController do
         end
       end
 
-      it 'throws 404 if the person is remote' do
-        p = Factory(:person)
+      it 'forces to sign in if the person is remote' do
+        p = FactoryGirl.create(:person)
 
         get :show, :id => p.to_param
-        response.status.should == 404
+        response.should be_redirect
+        response.should redirect_to new_user_session_path
       end
     end
 
@@ -326,7 +319,7 @@ describe PeopleController do
       end
 
       it "posts include reshares" do
-        reshare = @user.post(:reshare, :public => true, :root_guid => Factory(:status_message, :public => true).guid, :to => alice.aspects)
+        reshare = @user.post(:reshare, :public => true, :root_guid => FactoryGirl.create(:status_message, :public => true).guid, :to => alice.aspects)
         get :show, :id => @user.person.to_param
         assigns[:stream].posts.map { |x| x.id }.should include(reshare.id)
       end
@@ -359,21 +352,37 @@ describe PeopleController do
       end
 
       it "posts include reshares" do
-        reshare = @user.post(:reshare, :public => true, :root_guid => Factory(:status_message, :public => true).guid, :to => alice.aspects)
+        reshare = @user.post(:reshare, :public => true, :root_guid => FactoryGirl.create(:status_message, :public => true).guid, :to => alice.aspects)
         get :show, :id => @user.person.to_param
         assigns[:stream].posts.map { |x| x.id }.should include(reshare.id)
       end
     end
   end
 
+  describe '#hovercard' do
+    before do
+      @hover_test = FactoryGirl.create(:person)
+      @hover_test.profile.tag_string = '#test #tags'
+      @hover_test.profile.save!
+    end
 
+    it 'redirects html requests' do
+      get :hovercard, :person_id => @hover_test.guid
+      response.should redirect_to person_path(:id => @hover_test.guid)
+    end
+
+    it 'returns json with profile stuff' do
+      get :hovercard, :person_id => @hover_test.guid, :format => 'json'
+      JSON.parse( response.body )['handle'].should == @hover_test.diaspora_handle
+    end
+  end
 
   describe '#refresh_search ' do
     before(:each)do
-      @eugene = Factory(:person,
-                      :profile => Factory.build(:profile, :first_name => "Eugene", :last_name => "w"))
-      @korth = Factory(:person,
-                     :profile => Factory.build(:profile, :first_name => "Evan", :last_name => "Korth"))
+      @eugene = FactoryGirl.create(:person,
+                      :profile => FactoryGirl.build(:profile, :first_name => "Eugene", :last_name => "w"))
+      @korth = FactoryGirl.create(:person,
+                     :profile => FactoryGirl.build(:profile, :first_name => "Evan", :last_name => "Korth"))
     end
 
     describe 'via json' do
@@ -412,35 +421,35 @@ describe PeopleController do
 
   describe '#diaspora_id?' do
     it 'returns true for pods on urls' do
-      @controller.diaspora_id?("ilya_123@pod.geraspora.de").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@pod.geraspora.de").should be_true
     end
 
     it 'returns true for pods on urls with port' do
-      @controller.diaspora_id?("ilya_123@pod.geraspora.de:12314").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@pod.geraspora.de:12314").should be_true
     end
 
     it 'returns true for pods on localhost' do
-      @controller.diaspora_id?("ilya_123@localhost").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@localhost").should be_true
     end
 
     it 'returns true for pods on localhost and port' do
-      @controller.diaspora_id?("ilya_123@localhost:1234").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@localhost:1234").should be_true
     end
 
     it 'returns true for pods on ip' do
-      @controller.diaspora_id?("ilya_123@1.1.1.1").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@1.1.1.1").should be_true
     end
 
     it 'returns true for pods on ip and port' do
-      @controller.diaspora_id?("ilya_123@1.2.3.4:1234").should be_true
+      @controller.send(:diaspora_id?, "ilya_123@1.2.3.4:1234").should be_true
     end
 
     it 'returns false for pods on with invalid url characters' do
-      @controller.diaspora_id?("ilya_123@join_diaspora.com").should be_false
+      @controller.send(:diaspora_id?, "ilya_123@join_diaspora.com").should be_false
     end
 
     it 'returns false for invalid usernames' do
-      @controller.diaspora_id?("ilya_2%3@joindiaspora.com").should be_false
+      @controller.send(:diaspora_id?, "ilya_2%3@joindiaspora.com").should be_false
     end
   end
 end

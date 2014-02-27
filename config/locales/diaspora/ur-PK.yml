@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -44,7 +44,6 @@ ur-PK:
   all_aspects: "تمام پہلو"
   application:
     helper:
-      diaspora_alpha: "ڈایسپورا* الف"
       unknown_person: "نامعلوم شخص"
       video_title:
         unknown: "نامعلوم ویڈیو عنوان"
@@ -383,5 +382,3 @@ ur-PK:
       close_account:
         what_we_delete: "We delete all of your posts, profile data, as soon as humanly possible. Your comments will hang around, but be associated with your Diaspora Handle."
       your_handle: "Your diaspora id"
-    getting_started:
-      what_facebook_does: "to Diaspora. This will pull your name and photo, and enable cross-positng."

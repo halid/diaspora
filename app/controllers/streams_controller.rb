@@ -2,15 +2,6 @@
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
-require File.join(Rails.root, "lib", "stream", "aspect")
-require File.join(Rails.root, "lib", "stream", "multi")
-require File.join(Rails.root, "lib", "stream", "comments")
-require File.join(Rails.root, "lib", "stream", "likes")
-require File.join(Rails.root, "lib", "stream", "mention")
-require File.join(Rails.root, "lib", "stream", "followed_tag")
-require File.join(Rails.root, "lib", "stream", "activity")
-
-
 class StreamsController < ApplicationController
   before_filter :authenticate_user!
   before_filter :save_selected_aspects, :only => :aspects
@@ -21,7 +12,7 @@ class StreamsController < ApplicationController
              :json
 
   def aspects
-    aspect_ids = (session[:a_ids] ? session[:a_ids] : [])
+    aspect_ids = (session[:a_ids] || [])
     @stream = Stream::Aspect.new(current_user, aspect_ids,
                                  :max_time => max_time)
     stream_responder
@@ -36,13 +27,7 @@ class StreamsController < ApplicationController
   end
 
   def multi
-    if params[:ex] && flag.new_stream?
-      @stream = Stream::Multi.new(current_user, :max_time => max_time)
-      gon.stream = PostPresenter.collection_json(@stream.stream_posts, current_user)
-      render :nothing => true, :layout => "post"
-    else
       stream_responder(Stream::Multi)
-    end
   end
 
   def commented
@@ -58,6 +43,7 @@ class StreamsController < ApplicationController
   end
 
   def followed_tags
+    gon.preloads[:tagFollowings] = tags
     stream_responder(Stream::FollowedTag)
   end
 
@@ -69,8 +55,8 @@ class StreamsController < ApplicationController
     end
 
     respond_with do |format|
-      format.html { render 'layouts/main_stream' }
-      format.mobile { render 'layouts/main_stream' }
+      format.html { render 'streams/main_stream' }
+      format.mobile { render 'streams/main_stream' }
       format.json { render :json => @stream.stream_posts.map {|p| LastThreeCommentsDecorator.new(PostPresenter.new(p, current_user)) }}
     end
   end

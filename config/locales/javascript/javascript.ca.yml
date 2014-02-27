@@ -1,8 +1,8 @@
-#   Copyright © 2011, Diaspora Inc.  This file is
+#   Copyright © 2011, 2012, 2013 Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 # 
-#   Jordi Mallach <jordi@softcatala.org>, 2011.
+#   Jordi Mallach <jordi@softcatala.org>, 2011, 2012, 2013.
 #   Abans d'actualitzar aquesta traducció, si us plau poseu-vos en contacte
 #   amb Jordi Mallach o Softcatalà <info@softcatala.org>.
 
@@ -11,6 +11,7 @@ ca:
     confirm_dialog: "N'esteu segur?"
     delete: "Suprimeix"
     ignore: "Omet"
+    ignore_user: "Voleu ignorar aquest usuari?"
     timeago:
       prefixAgo: "fa"
       prefixFromNow: "fa"
@@ -49,9 +50,6 @@ ca:
       toggle:
         zero: "Selecciona els aspectes"
         one: "En <%= count %> aspecte"
-        two: "En <%= count %> aspectes"
-        few: "En <%= count %> aspectes"
-        many: "En <%= count %> aspectes"
         other: "En <%= count %> aspectes"
     show_more: "mostra'n més"
     failed_to_like: "No s'ha pogut comunicar que us agrada!"
@@ -61,6 +59,8 @@ ca:
       hide: "amaga els comentaris"
     reshares:
       duplicate: "És bona, oi? Ja heu tornat a compartir aquesta publicació!"
+      successful: "S'ha tornat a compartir la publicació amb èxit!"
+      post: "Voleu tornar a compartir la publicació de <%= name %>?"
     aspect_navigation:
       select_all: "Selecciona'ls tots"
       deselect_all: "Desselecciona'ls tots"
@@ -72,6 +72,7 @@ ca:
       preparing_your_stream: "S'està preparant el vostre flux personalitzat…"
     photo_uploader:
       looking_good: "Vaja, teniu un aspecte fantàstic!"
+      completed: "<%= file %> completat"
     tags:
       wasnt_that_interesting: "D'acord, es possible que #<%= tagName %> no fos tan interessant…"
     people:
@@ -95,26 +96,28 @@ ca:
       likes:
         zero: "a cap persona li agrada"
         one: "li agrada a <%= count %> persona"
-        two: "li agrada a <%= count %> persones"
-        few: "li agrada a <%= count %> persones"
-        many: "li agrada a <%= count %> persones"
         other: "li agrada a <%= count %> persones"
 
       reshares:
         zero: "Torna a compartir"
         one: "<%= count %> vegada tornat a compartir"
-        two: "<%= count %> vegades tornat a compartir"
-        few: "<%= count %> vegades tornat a compartir"
-        many: "<%= count %> vegades tornat a compatir"
         other: "<%= count %> vegades tornat a compatir"
 
       more_comments:
         zero: "Mostra <%= count %> comentaris més"
         one: "Mostra <%= count %> comentari més"
-        two: "Mostra <%= count %> comentaris més"
-        few: "Mostra <%= count %> comentaris més"
-        many: "Mostra <%= count %> comentaris més"
         other: "Mostra <%= count %> comentaris més"
+
+      followed_tag:
+        title: "#Etiquetes que seguiu"
+        contacts_title: "Gent que empra aquestes etiquetes"
+        add_a_tag: "Afegeix una etiqueta"
+        follow: "Segueix"
+
+      tags:
+        follow: "Segueix #<%= tag %>"
+        following: "S'està seguint #<%= tag %>"
+        stop_following: "Deixa de seguir #<%= tag %>"
 
     header:
       home: "Inici"
@@ -132,6 +135,7 @@ ca:
       recent_notifications: "Notificacions recents"
       mark_all_as_read: "Marca'ls tots com llegits"
       view_all: "Visualitza'ls tots"
+      close: "tanca"
 
     viewer:
       stop_following_post: "Deixa de seguir la publicació"
@@ -141,3 +145,4 @@ ca:
       reshare: "Torna a compartir"
       reshared: "Tornat a compartir"
       comment: "Comenta"
+      home: "INICI"

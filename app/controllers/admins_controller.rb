@@ -1,5 +1,3 @@
-require File.join(Rails.root, 'lib','statistics')
-
 class AdminsController < ApplicationController
   before_filter :authenticate_user!
   before_filter :redirect_unless_admin
@@ -7,14 +5,16 @@ class AdminsController < ApplicationController
   def user_search
     params[:user] ||= {}
     params[:user].delete_if {|key, value| value.blank? }
-    @users = params[:user].empty? ? [] : User.where(params[:user])
+    @users = User.joins(person: :profile).where(["profiles.birthday > ?", Date.today - 13.years]) if params[:under13]
+    @users = (@users || User).where(params[:user]) if params[:user].present?
+    @users ||= []
   end
 
-  def admin_inviter 
+  def admin_inviter
     inviter = InvitationCode.default_inviter_or(current_user)
     email = params[:identifier]
     user = User.find_by_email(email)
-    
+
     unless user
       EmailInviter.new(email, inviter).send!
       flash[:notice] = "invitation sent to #{email}"
@@ -30,20 +30,15 @@ class AdminsController < ApplicationController
   end
 
   def weekly_user_stats
+    @created_users_by_week = Hash.new{ |h,k| h[k] = [] }
     @created_users = User.where("username IS NOT NULL and created_at IS NOT NULL")
-    @created_users_by_week =  Hash.new{ |h,k| h[k] = [] }
-    @created_users.each do |u| 
-      unless u.nil?
-          @created_users_by_week[u.created_at.beginning_of_week.strftime("%Y-%m-%d")].push("#{u.username}")
-        end
-      end
-
-    unless(params[:week]).nil?
-      # @segment = "#{@created_users_by_week[(params[:week])]}" 
-      @counter = "#{@created_users_by_week[(params[:week])].count}"
-    else
-      @segment = "date not found"
+    @created_users.find_each do |u|
+      week = u.created_at.beginning_of_week.strftime("%Y-%m-%d")
+      @created_users_by_week[week] << u.username
     end
+
+    @selected_week = params[:week] || @created_users_by_week.keys.first
+    @counter = @created_users_by_week[@selected_week].count
   end
 
   def stats
@@ -83,6 +78,7 @@ class AdminsController < ApplicationController
   end
 
   private
+
   def percent_change(today, yesterday)
     sprintf( "%0.02f", ((today-yesterday) / yesterday.to_f)*100).to_f
   end

@@ -1,33 +1,37 @@
-rails_env = ENV['RAILS_ENV'] || 'development'
+require File.expand_path('../load_config', __FILE__)
 
 # Enable and set these to run the worker as a different user/group
 #user  = 'diaspora'
 #group = 'diaspora'
 
-worker_processes 1
+worker_processes AppConfig.server.unicorn_worker.to_i
 
 ## Load the app before spawning workers
 preload_app true
 
 # How long to wait before killing an unresponsive worker
-timeout 30
+timeout AppConfig.server.unicorn_timeout.to_i
+
+@sidekiq_pid = nil
 
 #pid '/var/run/diaspora/diaspora.pid'
 #listen '/var/run/diaspora/diaspora.sock', :backlog => 2048
 
-# Ruby Enterprise Feature
-if GC.respond_to?(:copy_on_write_friendly=)
-  GC.copy_on_write_friendly = true
-end
 
+stderr_path AppConfig.server.stderr_log.get if AppConfig.server.stderr_log.present?
+stdout_path AppConfig.server.stdout_log.get if AppConfig.server.stdout_log.present?
 
 before_fork do |server, worker|
   # If using preload_app, enable this line
   ActiveRecord::Base.connection.disconnect!
 
   # disconnect redis if in use
-  if !AppConfig.single_process_mode?
-    Resque.redis.client.disconnect
+  unless AppConfig.single_process_mode?
+    Sidekiq.redis {|redis| redis.client.disconnect }
+  end
+  
+  if AppConfig.server.embed_sidekiq_worker?
+    @sidekiq_pid ||= spawn('bundle exec sidekiq')
   end
 
   old_pid = '/var/run/diaspora/diaspora.pid.oldbin'
@@ -44,17 +48,4 @@ end
 after_fork do |server, worker|
   # If using preload_app, enable this line
   ActiveRecord::Base.establish_connection
-
-  # copy pasta from resque.rb because i'm a bad person
-  if !AppConfig.single_process_mode?
-    if redis_to_go = ENV["REDISTOGO_URL"]
-      uri = URI.parse(redis_to_go)
-      Resque.redis = Redis.new(:host => uri.host, :port => uri.port, :password => uri.password)
-    elsif AppConfig[:redis_url]
-      Resque.redis = Redis.new(:host => AppConfig[:redis_url], :port => 6379)
-    end
-  end
-
-  # Enable this line to have the workers run as different user/group
-  #worker.user(user, group)
 end

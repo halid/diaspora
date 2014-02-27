@@ -3,7 +3,6 @@
 #   the COPYRIGHT file.
 
 require 'spec_helper'
-require File.join(Rails.root, 'lib', 'pubsubhubbub')
 
 describe Pubsubhubbub do
   describe '#publish' do

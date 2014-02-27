@@ -1,9 +1,6 @@
 require 'rubygems'
-require 'spork'
-#uncomment the following line to use spork with the debugger
-#require 'spork/ext/ruby-debug'
 
-Spork.prefork do
+prefork = proc do
   ENV["RAILS_ENV"] ||= "test"
   require 'cucumber/rails'
 
@@ -49,21 +46,16 @@ Spork.prefork do
   require File.join(File.dirname(__FILE__), "integration_sessions_controller")
   require File.join(File.dirname(__FILE__), "poor_mans_webmock")
 
-  require File.join(File.dirname(__FILE__), "..", "..", "spec", "helper_methods")
-  require File.join(File.dirname(__FILE__), "..", "..", "spec", "support","user_methods")
+  require 'sidekiq/testing/inline'
+
+  require Rails.root.join('spec', 'helper_methods')
+  require Rails.root.join('spec', 'support', 'inlined_jobs')
+  require Rails.root.join('spec', 'support', 'user_methods')
   include HelperMethods
 
   # require 'webmock/cucumber'
   # WebMock.disable_net_connect!(:allow_localhost => true)
 
-  silence_warnings do
-    SERVICES['facebook'] = {'app_id' => :fake, 'app_secret' => 'sdoigjosdfijg'}
-    AppConfig[:configured_services] << 'facebook'
-  end
-
-  require File.join(File.dirname(__FILE__), "..", "..", "spec", "support", "fake_resque")
-
-  require File.join(File.dirname(__FILE__), 'run_resque_in_process')
 
   #hax to get rubymine to run spork, set RUBYMINE_HOME in your .bash_profile
   if ENV["RUBYMINE_HOME"]
@@ -73,16 +65,13 @@ Spork.prefork do
   end
 end
 
-Spork.each_run do
+each_run = proc do
   Before do
-    @no_follow_diaspora_hq_setting = AppConfig[:no_follow_diasporahq]
-    AppConfig[:no_follow_diasporahq] = true
     DatabaseCleaner.clean
     Devise.mailer.deliveries = []
   end
 
   After do
-    AppConfig[:no_follow_diasporahq] = @no_follow_diaspora_hq_setting
     if Capybara.current_session.driver.respond_to?(:browser)
       Capybara.reset_sessions!
       # Capybara.current_session.driver.browser.manage.delete_all_cookies
@@ -99,6 +88,18 @@ Spork.each_run do
   After('@localserver') do
     CapybaraSettings.instance.restore
   end
+end
+
+begin
+  require 'spork'
+  #uncomment the following line to use spork with the debugger
+  #require 'spork/ext/ruby-debug'
+
+  Spork.prefork(&prefork)
+  Spork.each_run(&each_run)
+rescue LoadError
+  prefork.call
+  each_run.call
 end
 
 # give firefox more time to complete requests

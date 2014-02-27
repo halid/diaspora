@@ -5,7 +5,7 @@
         = @unread_notification_count
       = t('.notifications')
   .span-8.last
-    = link_to t('.mark_all_as_read'), notifications_read_all_path, :class => 'button'
+    = link_to t('.mark_all_as_read'), notifications_read_all_path, :class => "button #{'disabled' unless @unread_notification_count > 0}"
   .span-24.last
     .stream.notifications
       - @group_days.each do |day, notes|
@@ -24,6 +24,7 @@
                 
                 .media
                   .bd
+                    = person_image_tag note.actors.first, :thumb_medium
                     = notification_message_for(note)
                     %div
                       %time

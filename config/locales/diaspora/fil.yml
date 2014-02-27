@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -84,7 +84,7 @@ fil:
       no_contacts: "No mateys"
     many: "%{count} crews"
     new:
-      name: "Name"
+      name: "Pangalan"
     no_contacts_message:
       try_adding_some_more_contacts: "You can search (top) or invite (right) more contacts."
     one: "1 crew"
@@ -372,8 +372,6 @@ fil:
       close_account:
         what_we_delete: "We delete all of your posts, profile data, as soon as humanly possible. Your comments will hang around, but be associated with your Diaspora Handle."
       your_handle: "Your diaspora id"
-    getting_started:
-      what_facebook_does: "to Diaspora. This will pull your name and photo, and enable cross-positng."
   webfinger:
     fetch_failed: "hindi nakuha ang webfinger profile para sa %{profile_url}"
     hcard_fetch_failed: "nagkaroon ng problema sa pagkuha ng hcard ni %{account}"

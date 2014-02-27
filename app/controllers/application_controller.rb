@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2011, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -8,8 +8,11 @@ class ApplicationController < ActionController::Base
 
   before_filter :ensure_http_referer_is_set
   before_filter :set_locale
-  before_filter :set_git_header if (AppConfig[:git_update] && AppConfig[:git_revision])
+  before_filter :set_diaspora_header
   before_filter :set_grammatical_gender
+  before_filter :mobile_switch
+  before_filter :gon_set_current_user
+  before_filter :gon_set_preloads
 
   inflection_method :grammatical_gender => :gender
 
@@ -20,6 +23,10 @@ class ApplicationController < ActionController::Base
                 :tag_followings,
                 :tags,
                 :open_publisher
+
+  layout ->(c) { request.format == :mobile ? "application" : "centered_with_header_with_footer" }
+
+  private
 
   def ensure_http_referer_is_set
     request.env['HTTP_REFERER'] ||= '/'
@@ -60,9 +67,13 @@ class ApplicationController < ActionController::Base
     params[:page] = params[:page] ? params[:page].to_i : 1
   end
 
-  def set_git_header
-    headers['X-Git-Update'] = AppConfig[:git_update] if AppConfig[:git_update].present?
-    headers['X-Git-Revision'] = AppConfig[:git_revision] if AppConfig[:git_revision].present?
+  def set_diaspora_header
+    headers['X-Diaspora-Version'] = AppConfig.version_string
+
+    if AppConfig.git_available?
+      headers['X-Git-Update'] = AppConfig.git_update if AppConfig.git_update.present?
+      headers['X-Git-Revision'] = AppConfig.git_revision if AppConfig.git_revision.present?
+    end
   end
 
   def set_locale
@@ -85,7 +96,7 @@ class ApplicationController < ActionController::Base
 
   def set_grammatical_gender
     if (user_signed_in? && I18n.inflector.inflected_locale?)
-      gender = current_user.profile.gender.to_s.tr('!()[]"\'`*=|/\#.,-:', '').downcase
+      gender = current_user.gender.to_s.tr('!()[]"\'`*=|/\#.,-:', '').downcase
       unless gender.empty?
         i_langs = I18n.inflector.inflected_locales(:gender)
         i_langs.delete  I18n.locale
@@ -105,6 +116,17 @@ class ApplicationController < ActionController::Base
     @grammatical_gender || nil
   end
 
+  # use :mobile view for mobile and :html for everything else
+  # (except if explicitly specified, e.g. :json, :xml)
+  def mobile_switch
+    if session[:mobile_view] == true && request.format.html?
+      request.format = :mobile
+    elsif request.format.tablet?
+      # we currently don't have any special tablet views...
+      request.format = :html
+    end
+  end
+
   def after_sign_in_path_for(resource)
     stored_location_for(:user) || current_user_redirect_path
   end
@@ -113,14 +135,20 @@ class ApplicationController < ActionController::Base
     params[:max_time] ? Time.at(params[:max_time].to_i) : Time.now + 1
   end
 
-  def flag
-    @flag ||= FeatureFlagger.new(current_user)
-  end
-
-  private
-
   def current_user_redirect_path
-    return person_path(current_user.person) if current_user.beta?
-    current_user.getting_started? ? getting_started_path : root_path
+    current_user.getting_started? ? getting_started_path : stream_path
   end
+
+  def gon_set_current_user
+    return unless user_signed_in?
+    a_ids = session[:a_ids] || []
+    user = UserPresenter.new(current_user, a_ids)
+    gon.push({:user => user})
+  end
+
+  def gon_set_preloads
+    return unless gon.preloads.nil?
+    gon.preloads = {}
+  end
+
 end

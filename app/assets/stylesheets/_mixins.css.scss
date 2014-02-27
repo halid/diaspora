@@ -1,22 +1,5 @@
 /* Mixin file for sass.  Here is where we define our variables and
    browser compatability functions used in all scss/sass files */
-@import 'new_styles/new_mixins';
-
-/* Diapora's default color palate */
-$blue: #3f8fba;
-$dark-blue: darken(#0984C8,10%);
-$green: #8EDE3D;
-
-$grey: #2b2b2b;
-$light-grey: #ddd;
-
-$red: #a80000;
-$background: #fff;
-$creation-blue: #0097ff;
-
-$red: #a80000;
-$background: #fff;
-$creation-blue: #0097ff;
 
 /* Transision defaults */
 $speed: 0.1s;
@@ -49,9 +32,9 @@ $default-border-radius: 3px;
 
 /* Browser compatability */
 @mixin box-shadow($left, $top, $blur, $color:#000){
-  -webkit-box-shadow: $left $top $blur $color; 
-  -moz-box-shadow: $left $top $blur $color; 
-  box-shadow: $left $top $blur $color; 
+  -webkit-box-shadow: $left $top $blur $color;
+  -moz-box-shadow: $left $top $blur $color;
+  box-shadow: $left $top $blur $color;
 }
 
 @mixin linear-gradient($from, $to, $start:0%, $end:100%){
@@ -59,10 +42,20 @@ $default-border-radius: 3px;
 
   filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr=$from, endColorstr=$to);
   -ms-filter: "progid:DXImageTransform.Microsoft.gradient (GradientType=0, startColorstr=#{$from}, endColorstr=#{$to})";
-  
+
   background-image: -webkit-gradient(linear, 0% $start, 0% $end, from($from), to($to));
   background-image: -moz-linear-gradient(top, $from $start, $to $end);
   background-image: -o-linear-gradient(top, $from $start, $to $end);
+}
+
+@mixin horizontal-linear-gradient($from, $to, $start:0%, $end:100%){
+  background-image: mix($from,$to);
+
+  background-image: -moz-linear-gradient(left, $from $start, $to $end);
+  background-image: -o-linear-gradient(left, $from $start, $to $end);
+  background-image: -webkit-linear-gradient(left, $from $start, $to $end);
+  background-image: -ms-linear-gradient(left, $from $start, $to $end);
+  background-image: -khtml-linear-gradient(left, $from $start, $to $end);
 }
 
 @mixin opacity($val){
@@ -88,29 +81,81 @@ $default-border-radius: 3px;
   -webkit-animation : $name $speed $occurances;
      -moz-animation : $name $speed $occurances;
       -ms-animation : $name $speed $occurances;
+       -o-animation : $name $speed $occurances;
 }
 
 @mixin animation($name, $speed:0.2s, $easing:ease-in-out) {
   -webkit-animation: $name $speed $easing;
   -moz-animation: $name $speed $easing;
   -ms-animation: $name $speed $easing;
+  -o-animation: $name $speed $easing;
 }
 
 @mixin video-overlay(){
-  .video-overlay {
-    @include opacity(0.6);
+  position: relative;
+  cursor: pointer;
 
+  .video-overlay {
     background : {
+      color: rgba(0,0,0, .65);
       image : image-url('buttons/playbtn.png');
       repeat : no-repeat;
-      position : center center;
+      position : 10px center;
       size : 60px 60px;
     }
 
+    @include border-radius(70px, 10px, 10px, 70px);
+    @include box-shadow(0, 0, 32px, rgba(255,255,255,.5));
+
     position : absolute;
-    top : 0;
-    left : 0;
-    right : 0;
-    bottom : 0;
+    top : 50%;
+    left : 10%;
+    right : 10%;
+
+    height: 60px;
+    margin-top: -40px;
+    padding: 10px 7px 10px 80px;
+    overflow: hidden;
+
+    line-height: 60px;
+
+    & > div {
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 100%;
+    }
+
+    & > div > div {
+      @include opacity(1.0);
+      overflow: hidden;
+      text-shadow: -1px -1px 0 #000, 0 0 7px #111;
+      color: #F0F0F0;
+      font-size: 0.9em;
+      text-overflow: ellipsis;
+    }
+
+    .title {
+      font-weight: bold;
+      white-space: nowrap;
+      line-height: .95em;
+    }
+    .meta {
+      font-size: .94em;
+      line-height: 1.3em;
+      white-space: nowrap;
+      @include opacity(.9);
+
+      a {
+        color: lighten($blue, 25%);
+      }
+      a:visited {
+        color: $blue;
+      }
+    }
+    .desc {
+      font-size: .91em;
+      line-height: .97em;
+      max-height: 35px;
+    }
   }
 }

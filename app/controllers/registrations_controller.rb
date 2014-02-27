@@ -5,24 +5,24 @@
 class RegistrationsController < Devise::RegistrationsController
   before_filter :check_registrations_open_or_vaild_invite!, :check_valid_invite!
 
-  layout "post", :only => :new
+  layout ->(c) { request.format == :mobile ? "application" : "with_header" }, :only => [:new]
+  before_filter -> { @css_framework = :bootstrap }, only: [:new, :create]
 
   def create
-    @user = User.build(params[:user])
+    @user = User.build(user_params)
     @user.process_invite_acceptence(invite) if invite.present?
 
-    if @user.save
+    if @user.sign_up
       flash[:notice] = I18n.t 'registrations.create.success'
       @user.seed_aspects
-      Role.add_beta(@user.person) if invite.present? && invite.beta?
       sign_in_and_redirect(:user, @user)
       Rails.logger.info("event=registration status=successful user=#{@user.diaspora_handle}")
     else
       @user.errors.delete(:person)
-      
-      flash[:error] = @user.errors.full_messages.join(";")
+
+      flash[:error] = @user.errors.full_messages.join(" - ")
       Rails.logger.info("event=registration status=failure errors='#{@user.errors.full_messages.join(', ')}'")
-      render :new
+      render :action => 'new', :layout => 'with_header'
     end
   end
 
@@ -31,8 +31,9 @@ class RegistrationsController < Devise::RegistrationsController
   end
 
   private
+
   def check_valid_invite!
-    return true unless AppConfig[:registrations_closed] #this sucks
+    return true if AppConfig.settings.enable_registrations? #this sucks
     return true if invite && invite.can_be_used?
     flash[:error] = t('registrations.invalid_invite')
     redirect_to new_user_session_path
@@ -40,7 +41,7 @@ class RegistrationsController < Devise::RegistrationsController
 
   def check_registrations_open_or_vaild_invite!
     return true if invite.present?
-    if AppConfig[:registrations_closed]
+    unless AppConfig.settings.enable_registrations?
       flash[:error] = t('registrations.closed')
       redirect_to new_user_session_path
     end
@@ -51,6 +52,10 @@ class RegistrationsController < Devise::RegistrationsController
       @invite ||= InvitationCode.find_by_token(params[:invite][:token])
     end
   end
-  
+
   helper_method :invite
+
+  def user_params
+    params.require(:user).permit(:username, :email, :getting_started, :password, :password_confirmation, :language, :disable_mail, :invitation_service, :invitation_identifier, :show_community_spotlight_in_stream, :auto_follow_back, :auto_follow_back_aspect_id, :remember_me, :captcha, :captcha_key)
+  end
 end

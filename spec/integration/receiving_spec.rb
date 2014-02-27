@@ -42,11 +42,12 @@ describe 'a user receives a post' do
   end
 
   it "should show bob's post to alice" do
-    fantasy_resque do
+    inlined_jobs do |queue|
       sm = bob.build_post(:status_message, :text => "hi")
       sm.save!
       bob.aspects.reload
       bob.add_to_streams(sm, [@bobs_aspect])
+      queue.drain_all
       bob.dispatch_post(sm, :to => @bobs_aspect)
     end
 
@@ -70,12 +71,12 @@ describe 'a user receives a post' do
     end
 
     it 'notifies local users who are mentioned' do
-      @remote_person = Factory(:person, :diaspora_handle => "foobar@foobar.com")
+      @remote_person = FactoryGirl.create(:person, :diaspora_handle => "foobar@foobar.com")
       Contact.create!(:user => alice, :person => @remote_person, :aspects => [@alices_aspect])
 
       Notification.should_receive(:notify).with(alice, anything(), @remote_person)
 
-      @sm = Factory.build(:status_message, :text => "hello @{#{alice.name}; #{alice.diaspora_handle}}", :diaspora_handle => @remote_person.diaspora_handle, :author => @remote_person)
+      @sm = FactoryGirl.create(:status_message, :text => "hello @{#{alice.name}; #{alice.diaspora_handle}}", :diaspora_handle => @remote_person.diaspora_handle, :author => @remote_person)
       @sm.save
 
       zord = Postzord::Receiver::Private.new(alice, :object => @sm, :person => bob.person)
@@ -151,10 +152,10 @@ describe 'a user receives a post' do
 
     context 'dependent delete' do
       it 'deletes share_visibilities on disconnected by' do
-        @person = Factory(:person)
+        @person = FactoryGirl.create(:person)
         alice.contacts.create(:person => @person, :aspects => [@alices_aspect])
 
-        @post = Factory(:status_message, :author => @person)
+        @post = FactoryGirl.create(:status_message, :author => @person)
         @post.share_visibilities.should be_empty
         receive_with_zord(alice, @person, @post.to_diaspora_xml)
         @contact = alice.contact_for(@person)
@@ -173,7 +174,7 @@ describe 'a user receives a post' do
 
     context 'remote' do
       before do
-        fantasy_resque do
+        inlined_jobs do |queue|
           connect_users(alice, @alices_aspect, eve, @eves_aspect)
           @post = alice.post(:status_message, :text => "hello", :to => @alices_aspect.id)
 
@@ -183,10 +184,28 @@ describe 'a user receives a post' do
           receive_with_zord(eve, alice.person, xml)
 
           comment = eve.comment!(@post, 'tada')
+          queue.drain_all
+          # After Eve creates her comment, it gets sent to Alice, who signs it with her private key
+          # before relaying it out to the contacts on the top-level post
           comment.parent_author_signature = comment.sign_with_key(alice.encryption_key)
           @xml = comment.to_diaspora_xml
           comment.delete
+
+          comment_with_whitespace = alice.comment!(@post, '   I cannot lift my thumb from the spacebar  ')
+          queue.drain_all
+          @xml_with_whitespace = comment_with_whitespace.to_diaspora_xml
+          @guid_with_whitespace = comment_with_whitespace.guid
+          comment_with_whitespace.delete
         end
+      end
+
+      it 'should receive a relayed comment with leading whitespace' do
+        eve.reload.visible_shareables(Post).size.should == 1
+        post_in_db = StatusMessage.find(@post.id)
+        post_in_db.comments.should == []
+        receive_with_zord(eve, alice.person, @xml_with_whitespace)
+
+        post_in_db.comments(true).first.guid.should == @guid_with_whitespace
       end
 
       it 'should correctly attach the user already on the pod' do
@@ -206,11 +225,11 @@ describe 'a user receives a post' do
         Profile.where(:person_id => remote_person.id).delete_all
         remote_person.attributes.delete(:id) # leaving a nil id causes it to try to save with id set to NULL in postgres
 
-        m = mock()
+        m = double()
         Webfinger.should_receive(:new).twice.with(eve.person.diaspora_handle).and_return(m)
         m.should_receive(:fetch).twice.and_return{
           remote_person.save(:validate => false)
-          remote_person.profile = Factory(:profile, :person => remote_person)
+          remote_person.profile = FactoryGirl.create(:profile, :person => remote_person)
           remote_person
         }
 
@@ -237,13 +256,13 @@ describe 'a user receives a post' do
       end
 
       it 'does not raise a `Mysql2::Error: Duplicate entry...` exception on save' do
-        fantasy_resque do
+        inlined_jobs do
           @comment = bob.comment!(@post, 'tada')
           @xml = @comment.to_diaspora_xml
-
-          lambda {
+            
+          expect {
             receive_with_zord(alice, bob.person, @xml)
-          }.should_not raise_exception
+          }.to_not raise_exception
         end
       end
     end
@@ -253,11 +272,11 @@ describe 'a user receives a post' do
   describe 'receiving mulitple versions of the same post from a remote pod' do
     before do
       @local_luke, @local_leia, @remote_raphael = set_up_friends
-      @post = Factory.build(:status_message, :text => 'hey', :guid => '12313123', :author=> @remote_raphael, :created_at => 5.days.ago, :updated_at => 5.days.ago)
+      @post = FactoryGirl.create(:status_message, :text => 'hey', :guid => '12313123', :author=> @remote_raphael, :created_at => 5.days.ago, :updated_at => 5.days.ago)
     end
 
     it 'does not update created_at or updated_at when two people save the same post' do
-      @post = Factory.build(:status_message, :text => 'hey', :guid => '12313123', :author=> @remote_raphael, :created_at => 5.days.ago, :updated_at => 5.days.ago)
+      @post = FactoryGirl.build(:status_message, :text => 'hey', :guid => '12313123', :author=> @remote_raphael, :created_at => 5.days.ago, :updated_at => 5.days.ago)
       xml = @post.to_diaspora_xml
       receive_with_zord(@local_luke, @remote_raphael, xml)
       old_time = Time.now+1
@@ -267,11 +286,11 @@ describe 'a user receives a post' do
     end
 
     it 'does not update the post if a new one is sent with a new created_at' do
-      @post = Factory.build(:status_message, :text => 'hey', :guid => '12313123', :author => @remote_raphael, :created_at => 5.days.ago)
+      @post = FactoryGirl.build(:status_message, :text => 'hey', :guid => '12313123', :author => @remote_raphael, :created_at => 5.days.ago)
       old_time = @post.created_at
       xml = @post.to_diaspora_xml
       receive_with_zord(@local_luke, @remote_raphael, xml)
-      @post = Factory.build(:status_message, :text => 'hey', :guid => '12313123', :author => @remote_raphael, :created_at => 2.days.ago)
+      @post = FactoryGirl.build(:status_message, :text => 'hey', :guid => '12313123', :author => @remote_raphael, :created_at => 2.days.ago)
       receive_with_zord(@local_luke, @remote_raphael, xml)
       (Post.find_by_guid @post.guid).created_at.day.should == old_time.day
     end
@@ -294,15 +313,38 @@ describe 'a user receives a post' do
 
 
   context 'retractions' do
+    let(:message) { bob.post(:status_message, text: "cats", to: @bobs_aspect.id) }
+    let(:zord) { Postzord::Receiver::Private.new(alice, person: bob.person) }
+
     it 'should accept retractions' do
-      message = bob.post(:status_message, :text => "cats", :to => @bobs_aspect.id)
       retraction = Retraction.for(message)
       xml = retraction.to_diaspora_xml
 
-      lambda {
-        zord = Postzord::Receiver::Private.new(alice, :person => bob.person)
+      expect {
         zord.parse_and_receive(xml)
-      }.should change(StatusMessage, :count).by(-1)
+      }.to change(StatusMessage, :count).by(-1)
+    end
+
+    it 'should accept relayable retractions' do
+      comment = bob.comment! message, "and dogs"
+      retraction = RelayableRetraction.build(bob, comment)
+      xml = retraction.to_diaspora_xml
+
+      expect {
+        zord.parse_and_receive xml
+      }.to change(Comment, :count).by(-1)
+    end
+
+    it 'should accept signed retractions for public posts' do
+      message = bob.post(:status_message, text: "cats", public: true)
+      retraction = SignedRetraction.build(bob, message)
+      salmon = Postzord::Dispatcher::Public.salmon bob, retraction.to_diaspora_xml
+      xml = salmon.xml_for alice.person
+      zord = Postzord::Receiver::Public.new xml
+
+      expect {
+        zord.receive!
+      }.to change(Post, :count).by(-1)
     end
   end
 

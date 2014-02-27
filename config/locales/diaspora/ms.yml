@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -44,7 +44,6 @@ ms:
   all_aspects: "Semua Aspek"
   application:
     helper:
-      diaspora_alpha: "DIASPORA* ALFA"
       unknown_person: "orang yang tidak diketahui"
       video_title:
         unknown: "Tajuk Wayang Tidak Diketahui"

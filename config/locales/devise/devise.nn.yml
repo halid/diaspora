@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -14,7 +14,7 @@ nn:
     failure:
       inactive: "Kontoen din var ikkje teken i bruk."
       invalid: "Brukarnamnet eller passordet er ugyldig."
-      invalid_token: "Ugyldig autentisering."
+      invalid_token: "Ugyldig aktiveringkode"
       locked: "Kontoen din er låst."
       timeout: "Økta finst ikkje lenger. Logg deg på att."
       unauthenticated: "Du må logga deg på eller melda deg inn før du kan halda fram."
@@ -29,34 +29,6 @@ nn:
         subject: "Stadfestingsrettleiing"
         you_can_confirm: "Du kan stadfesta kontoen din ved å nytta lenkja nedanfor:"
       hello: "Hei %{email}."
-      invitation_instructions:
-        accept: "Godta invitasjonen"
-        be_yourself: "Ver deg sjølv"
-        be_yourself_paragraph: "Verdsveven har laga nye, unike vegar for korleis me kan uttrykka oss. %{strong_diaspora} lar deg vere deg sjølv og dele på den måten du ynskjer, både med eller utan det ekte namnet ditt."
-        cubbies: "Cubbi.es"
-        displaying_correctly: "Email not displaying correctly? %{link} in your browser"
-        email_address: "questions@joindiaspora.com"
-        email_us: "For å få vite meir eller for å få hjelp med Diaspora*-kontoen din, ta kontakt med oss på %{email}."
-        finally: "Endeleg er det her!"
-        friends_saying: "Dette seier venene dine..."
-        get_connected: "Vert tilknytt"
-        get_connected_paragraph: "Som ei internasjonal rørsle med mål om å ein betre verdsvev, er %{strong_diaspora} sitt viktigaste verkemiddel samhaldet. Treff nye menneske, del med vener, og ver med på moroa."
-        have_fun: "Ha det gama"
-        have_fun_paragraph: "%{strong_diaspora} handlar om å oppdage framifrå nytt innhald og nye folk på nettet. %{link}, verda si fyrste %{strong_diaspora}-tilleggsprogram er berre byrja. Samle og el nettet i all si prakt."
-        help_fund: "gje ein slant til Diaspora"
-        here: "her"
-        ignore: "Om du ikkje ønskjer å godta invitasjonen, lèt du berre vera å svara på meldinga."
-        join_team: "Ver med på laget"
-        love: "Med kjærleg helsing,"
-        made_by_people: "%{strong_diaspora} er laga av folk som elskar verdsveven like mykje som du gjer. %{jointeam}, eller %{helpfund}!"
-        more_people: "Enno fleire menneske gler seg til å sjå deg!"
-        no_account_till: "Kontoen din vil ikkje verta oppretta før du nyttar lenkja ovanfor og loggar deg på."
-        or: "eller"
-        sign_up_now: "Meld deg inn no →"
-        subject: "Du er vorten invitert til å vera med i Diaspora."
-        team_diaspora: "Team Diaspora"
-        unsubscribe: "For å melde deg av, klikk på %{link}."
-        view_in: "View in"
       inviter:
         accept_at: "på %{url}, du kan godta det gjennom lenkja nedanfor."
         has_invited_you: "%{name}"
@@ -80,7 +52,7 @@ nn:
         forgot_password: "Har du gløymt passordet ditt?"
         no_account: "Det finst ingen konto med denne e-postadressa. Om du ventar på ein invitasjon, skal du veta at vi sender dei ut så fort vi kan."
         send_password_instructions: "Send meg opplysningar om korleis nullstilla passordet"
-      send_instructions: "Om ei lita stund vil du få ei e-postmelding med opplysningar om korleis du kan nullstilla passordet ditt."
+      send_instructions: "Om ei lita stund vil du få ein e-post med opplysningar om korleis du kan nullstilla passordet ditt."
       updated: "Passordet ditt vart endra. Du er no pålogga."
     registrations:
       destroyed: "Ha det! Kontoen din vart sletta. Vi vonar vi ser deg att snart."
@@ -88,9 +60,6 @@ nn:
       updated: "Kontoen din vart oppdatert."
     sessions:
       new:
-        alpha_software: "Du er på veg til å ta i bruk alfa-program."
-        bugs_and_feedback: "Ver merksam på at du vil oppleva feil. Vi ber deg om å rapportera dei til oss ved å nytta tilbakemeldingsknappen på nettlesaren si høgre side. Så skal vi prøva å ordna dei så fort råd er."
-        bugs_and_feedback_mobile: "Ver merksam på at du vil oppleva feil. Vi ber deg om å rapportera dei til oss. Så skal vi prøva å ordna dei så fort råd er."
         login: "Logg på"
         modern_browsers: "kan berre nytta moderne nettlesarar."
         password: "Passord"
@@ -106,9 +75,7 @@ nn:
         receive_unlock: "Fekk du ikkje nullstillingsrettleiinga?"
         sign_in: "Logg på"
         sign_up: "Påmelding"
-        sign_up_closed: "Du kan ikkje melda deg på no."
-      mail_signup_form:
-        sign_up_for_an_invite: "Meld deg på for å få ein invitasjon."
+        sign_up_closed: "Du kan ikkje melda deg på nett no."
     unlocks:
       new:
         resend_unlock: "Send opplåsingrettleiinga på nytt"

@@ -6,7 +6,8 @@ module NotifierHelper
   def post_message(post, opts={})
     opts[:length] ||= 200
     if post.respond_to? :formatted_message
-      message = truncate(post.formatted_message(:plain_text => true), :length => opts[:length])
+      message = strip_markdown(post.formatted_message(:plain_text => true))
+      message = truncate(message, :length => opts[:length])
       message = process_newlines(message) if opts[:process_newlines]
       message
     else
@@ -19,16 +20,9 @@ module NotifierHelper
   # @return [String] The truncated and formatted comment.
   def comment_message(comment, opts={})
     opts[:length] ||= 600
-    text = truncate(comment.text, :length => opts[:length])
+    text = strip_markdown(comment.text)
+    text = truncate(text, :length => opts[:length])
     text = process_newlines(text) if opts[:process_newlines]
     text
-  end
-
-  def invite_email_title
-    if @inviter.present?
-      I18n.t 'notifier.invited_you', :name => @inviter.person.name
-    else
-      I18n.t 'notifier.accept_invite'
-    end
   end
 end

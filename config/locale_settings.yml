@@ -1,11 +1,9 @@
-default: "en"
-
-
 available:
   ar: "العربية"
   art-nvi: "Na'vi"
   bg: "български език"
   br: "Brezhoneg"
+  bs: "bosanski jezik"
   ca: "Català"
   cs: "Čeština"
   cy: "Cymraeg"
@@ -21,16 +19,20 @@ available:
   es: "Castellano"
   es-AR: "Castellano - Argentina"
   es-CL: "Castellano - Chile"
+  es-VE: "Castellano - Venezuela"
   es-MX: "Español, México"
   et: "Eesti"
   eu: "Euskara"
   fi: "Suomi"
   fil: "Filipino"
   fr: "Français"
+  fy: "Frysk"
   ga: "Gaeilge"
   gl: "Galego"
   he: "עברית"
   hu: "magyar nyelv"
+  hy: "հայերեն"
+  ia: "Interlingua"
   id: "Bahasa Indonesia"
   is: "íslenska"
   it: "Italiano"
@@ -50,15 +52,18 @@ available:
   pt-BR: "Português (Brasil)"
   ro: "Română"
   ru: "Русский"
+  si: "සිංහල"
   sk: "Slovenčina"
   sl: "Slovenščina"
   sq: "gjuha shqipe"
+  sr: "српски језик"
   sv: "Svenska"
   te: "తెలుగు"
   tr: "Türk"
   uk: "украї́нська мо́ва"
   ur-PK: "اُردو (پاکستان)"
   vi: "Tiếng Việt"
+  wo: "Wolof"
   zh-CN: "中文"
   zh-TW: "台灣中文"
 
@@ -90,6 +95,8 @@ fallbacks:
     - "es"
   es-MX:
     - "es"
+  es-VE:
+    - "es"
   gl:
     - "gl-ES"
   zh:
@@ -105,7 +112,6 @@ fallbacks:
     - "pt"
   pt-PT:
     - "pt"
-
 
 rtl:
   - "ar"

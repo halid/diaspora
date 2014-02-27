@@ -1,22 +1,17 @@
 #trademark sillyness
 app/views/home/_show.*
-app/assets/images/custom/*
+app/assets/images/custom/
 
 
 # Configuration files
-config/app_config.yml
-config/app.yml
-config/application.yml
+config/diaspora.yml
 config/heroku.yml
-config/script_server*.yml
-config/fb_config.yml
-config/oauth_keys.yml
 config/initializers/secret_token.rb
 config/redis.conf
 config/deploy_config.yml
 .bundle
-vendor/bundle/*
-vendor/cache/*
+vendor/bundle/
+vendor/cache/
 config/database.yml
 .rvmrc_custom
 .rvmrc.local
@@ -26,29 +21,32 @@ config/email_offset
 config/mailing_list.csv
 
 # Generated files
-log/*
+log/
 public/stylesheets/*.css
 public/diaspora
 spec/fixtures/*.y*ml
 spec/fixtures/*.fixture.*
-coverage/*
-xml_locales/*
+coverage/
+xml_locales/
+app/assets/images/branding-*.png
+app/assets/images/icons-*.png
+app/assets/images/social_media_logos-*.png
 
 #Documentation
 .yardoc/
 doc/
 
 # Uploaded files and local files
-public/uploads/*
-public/assets/*
+public/uploads/
+public/assets/
 public/source.tar*
 public/.well-known
-tmp/**/*
-tmp/*
+tmp/**/
+tmp/
 *.sqlite3
 
 # Temporary files of every sort
-.sass-cache/*
+.sass-cache/
 .DS_Store
 .idea
 .redcar
@@ -58,6 +56,7 @@ tmp/*
 *.swo
 *.swp
 *~
+*#
 bin/*
 nbproject
 patches-*
@@ -66,7 +65,3 @@ dump.rdb
 
 #Rubinius's JIT
 *.rbc
-
-# Ignore precompiled assets
-# Heroku or Capistrano can and should regenerate them on every deploy
-public/assets

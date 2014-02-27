@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -45,16 +45,20 @@ ar:
       pages: "صفحات"
       user_search: "بحث عن عضو"
       weekly_user_stats: "إحصائيات المستخدم الإسبوعية"
+    stats:
+      2weeks: "أسبوعين"
+      daily: "يومياً"
+      month: "شهر"
+      week: "أسبوع"
   ago: "منذ %{time}"
   all_aspects: "كل الفئات"
   application:
     helper:
-      diaspora_alpha: "دياسبرا* ألفا"
       unknown_person: "شخص مجهول"
       video_title:
         unknown: "فيديو غير مُعَنْوَن"
   are_you_sure: "أواثقٌ أنت؟"
-  are_you_sure_delete_account: "هل تريد حقا إغلاق حسابك؟ هذه الخطوة لا يمكن التراجع عنها!"
+  are_you_sure_delete_account: "هل تريد حقا إغلاق حسابك؟ عند إغلاق حسابك تحذف كل معلوماتك ولا يمكن استرجاعهاا!"
   aspect_memberships:
     destroy:
       failure: "فشل في حذف عضو من الفئة"
@@ -120,7 +124,6 @@ ar:
         tag_bug: "#bug"
         tag_feature: "ميزة"
         tag_question: "سؤال"
-        tutorials_wiki_and_forum: "%{tutorial} و %{wiki} و %{forum} : دروس وشروحات وأخبار من المُجتمع."
       introduce_yourself: "هذه هى ساحة مشاركاتك.  هيا قدم نفسك."
       keep_diaspora_running: "حافظ على التطور السريع ل ديسبرا بتبرعاتك الشهرية"
       new_here:
@@ -213,6 +216,8 @@ ar:
       many_people_are_you_sure: "هل أنت متأكد من بدأ هذه المحادثة الخاصة مع أكثر من %{suggested_limit} جهات اتصال? من الأفضل إرسال مشاركة لهذه الفئة لتتصل بهم."
       my_contacts: "جهات الاتصال الخاصة بي"
       no_contacts: "لا توجد جهات اتصال."
+      no_contacts_message: "انظر في  {community_spotlight}%"
+      no_contacts_message_with_aspect: "انظر في %{community_spotlight} او %{add_to_aspect_link}"
       only_sharing_with_me: "فقط يتشاركون معي"
       remove_person_from_aspect: "احذف %{person_name} من \"%{aspect_name}\""
       start_a_conversation: "ابدأ محادثة"
@@ -291,6 +296,7 @@ ar:
     new:
       already_invited: "لم يقبل هؤلاء الأشخاص دعوتك:"
       aspect: "فئة"
+      check_out_diaspora: "تحقق من  دياسبورا"
       if_they_accept_info: "إذا قبلوا دعوتك ، سيتم إضافتهم إلى الفئة التي دعوتهم إليها"
       invite_someone_to_join: "دعوة صديق للإنضمام إلى دياسبرا"
       language: "اللغة"
@@ -481,6 +487,7 @@ ar:
       view_profile: "عرض ملف %{name} الشخصي"
     thanks: "شكرا,"
     to_change_your_notification_settings: "لتعديل إعدادات التنبيهات خاصتك"
+  nsfw: "غير مناسب لمكان العمل"
   ok: "حسنًا"
   or: "أو"
   password: "كلمة المرور"
@@ -503,7 +510,6 @@ ar:
       no_results: "يجب تحديد شيء للبحث عنه"
       results_for: "نتائج البحث عن"
       searching: "جارى البحث، كن صبوراً من فضلك..."
-    last_post: "آخر مشاركة"
     many: "%{count} أعضاء"
     one: "1شخص"
     other: "%{count} عضو"
@@ -563,6 +569,7 @@ ar:
       invalid_ext: "{file} له صيغة غير صالحة. {extensions} هي الصيغ الوحيدة المسموح بها."
       size_error: "{file} ذو حجم كبير جدا, {sizeLimit} هو الحجم الأقصى المسموح به."
     new_profile_photo:
+      or_select_one_existing: "او اختار صور من %{photos}"
       upload: "ارْفَع صورةً شخصيةً جديدة"
     photo:
       view_all: "عرض كل صور %{name}"
@@ -637,12 +644,15 @@ ar:
       update: "تحديث"
     new:
       create_my_account: "أًنشِئ حسابي"
+      email: "الإيميـــل"
       enter_email: "أدخل عنوان بريد إلكتروني"
       enter_password: "أدخل كلمة مرور"
       enter_password_again: "أعد إدخال كلمة المرور"
       enter_username: "اختر معرف (فقط حروف, أرقام, و الإشارات الخطية)"
       join_the_movement: "إنضم للرّكب"
+      password: "كلمة السر"
       sign_up_message: "Social Networking with a <3"
+      username: "إسم المستخدم"
   requests:
     create:
       sending: "يُرسِل ..."
@@ -854,7 +864,6 @@ ar:
   tags:
     show:
       follow: "تابع #%{tag}"
-      followed_by: "يُتابع بواسطة"
       following: "أنت تتابع #%{tag}"
       nobody_talking: "لم يتحدث أحدٌ عن %{tag} بعد"
       none: "الوسم الفارغ غير موجود!"
@@ -918,7 +927,6 @@ ar:
       hashtag_explanation: "الوسوم تسمح لك بالحديث عن اهتماماتك ومتابعتها.  وهي أيضا طريقة عبقرية للعثور على أناس جدد بدياسبرا."
       hashtag_suggestions: "جرب الوسوم التالية احب #فن، #أفلام، #صور، إلخ."
       saved: "تم الحفظ!"
-      what_facebook_does: "to Diaspora. This will pull your name and photo, and enable cross-positng."
       who_are_you: "من أنت؟"
     privacy_settings:
       ignored_users: "المستخدمين الذين تم تجاهلهم"

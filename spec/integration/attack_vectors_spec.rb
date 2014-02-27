@@ -5,7 +5,7 @@
 require 'spec_helper'
 
 
-def receive(post, opts)
+def receive_post(post, opts)
   sender = opts.fetch(:from)
   receiver = opts.fetch(:by)
   salmon_xml = sender.salmon(post).xml_for(receiver.person)
@@ -13,8 +13,16 @@ def receive(post, opts)
   zord.perform!
 end
 
+def receive_public(post, opts)
+  sender = opts.fetch(:from)
+  salmon_xml = Salmon::Slap.create_by_user_and_activity(sender, post.to_diaspora_xml).xml_for(nil)
+  post.destroy
+  zord = Postzord::Receiver::Public.new(salmon_xml)
+  zord.perform!
+end
+
 def temporary_user(&block)
-  user = Factory(:user)
+  user = FactoryGirl.create(:user)
   block_return_value = yield user
   user.delete
   block_return_value
@@ -27,11 +35,14 @@ def temporary_post(user, &block)
   block_return_value
 end
 
-def expect_error(partial_message, &block)
-  begin 
+def expect_error(partial_message, &block)# DOES NOT REQUIRE ERROR!!
+  begin
     yield
   rescue => e
     e.message.should match partial_message
+
+  ensure
+    raise "no error occured where expected" unless e.present?
   end
 end
 
@@ -47,7 +58,7 @@ end
     #returns the message
 def legit_post_from_user1_to_user2(user1, user2)
   original_message = user1.post(:status_message, :text => 'store this!', :to => user1.aspects.find_by_name("generic").id)
-  receive(original_message, :from => user1, :by => user2)
+  receive_post(original_message, :from => user1, :by => user2)
   original_message
 end
 
@@ -74,10 +85,10 @@ describe "attack vectors" do
         zord = Postzord::Receiver::Private.new(bob, :salmon_xml => salmon_xml)
 
         expect {
-          expect_error /Contact required/ do
+          expect {
             zord.perform!
-          end
-        }.should_not change(Post, :count)
+          }.to raise_error Diaspora::ContactRequiredUnlessRequest
+        }.to_not change(Post, :count)
 
         user_should_not_see_guid(bob, bad_post_guid)
       end
@@ -99,9 +110,9 @@ describe "attack vectors" do
         #bob sends it to himself?????
         zord = Postzord::Receiver::Private.new(bob, :salmon_xml => salmon_xml)
 
-        expect_error /Contact required/ do
+        expect {
           zord.perform!
-        end
+        }.to raise_error Diaspora::ContactRequiredUnlessRequest
 
         #alice still should not see eves original post, even though bob sent it to her
         user_should_not_see_guid(alice, original_message.guid)
@@ -114,11 +125,19 @@ describe "attack vectors" do
         profile.first_name = "Not BOB"
 
         expect {
-          expect_error /Author does not match XML author/ do
-            receive(profile, :from => alice, :by => bob)
-          end
-        }.should_not change(eve.profile, :first_name) 
+          expect {
+            receive_post(profile, :from => alice, :by => bob)
+          }.to raise_error Diaspora::AuthorXMLAuthorMismatch
+        }.to_not change(eve.profile, :first_name)
       end
+    end
+
+
+    it 'public stuff should not be spoofed from another author' do
+      post = FactoryGirl.build(:status_message, :public => true, :author => eve.person)
+      expect {
+        receive_public(post, :from => alice)
+      }.to raise_error Diaspora::AuthorXMLAuthorMismatch
     end
   end
 
@@ -131,11 +150,11 @@ describe "attack vectors" do
         original_message = legit_post_from_user1_to_user2(eve, bob)
 
         #someone else tries to make a message with the same guid
-        malicious_message = Factory.build(:status_message, :id => original_message.id, :guid => original_message.guid, :author => alice.person)
+        malicious_message = FactoryGirl.build(:status_message, :id => original_message.id, :guid => original_message.guid, :author => alice.person)
 
         expect{
-          receive(malicious_message, :from => alice, :by => bob)
-        }.should_not change(original_message, :author_id)
+          receive_post(malicious_message, :from => alice, :by => bob)
+        }.to_not change(original_message, :author_id)
       end
 
       it 'does not save a message over an old message with the same author' do
@@ -144,11 +163,11 @@ describe "attack vectors" do
         original_message = legit_post_from_user1_to_user2(eve, bob)
 
         #eve tries to send me another message with the same ID
-        malicious_message = Factory.build( :status_message, :id => original_message.id, :text => 'BAD!!!', :author => eve.person)
+        malicious_message = FactoryGirl.build( :status_message, :id => original_message.id, :text => 'BAD!!!', :author => eve.person)
 
         expect {
-          receive(malicious_message, :from => eve, :by => bob)
-        }.should_not change(original_message, :text)
+          receive_post(malicious_message, :from => eve, :by => bob)
+        }.to_not change(original_message, :text)
       end
     end
 
@@ -156,15 +175,15 @@ describe "attack vectors" do
     it "ignores retractions on a post not owned by the retraction's sender" do
       original_message = legit_post_from_user1_to_user2(eve, bob)
 
-      ret = bogus_retraction do |retraction| 
+      ret = bogus_retraction do |retraction|
         retraction.post_guid = original_message.guid
         retraction.diaspora_handle = alice.person.diaspora_handle
         retraction.type = original_message.class.to_s
       end
 
       expect {
-        receive(ret, :from => alice, :by => bob)
-      }.should_not change(StatusMessage, :count)
+        receive_post(ret, :from => alice, :by => bob)
+      }.to_not change(StatusMessage, :count)
     end
 
     it "silently disregards retractions for non-existent posts(that are from someone other than the post's author)" do
@@ -176,8 +195,8 @@ describe "attack vectors" do
                             end
                           end
        expect{
-        receive(bogus_retraction, :from => alice, :by => bob)
-      }.should_not raise_error
+        receive_post(bogus_retraction, :from => alice, :by => bob)
+      }.to_not raise_error
     end
 
     it 'should not receive retractions where the retractor and the salmon author do not match' do
@@ -190,10 +209,10 @@ describe "attack vectors" do
       end
 
       expect {
-        expect_error /Author does not match XML author/  do
-          receive(retraction, :from => alice, :by => bob)
-        end
-      }.should_not change(bob.visible_shareables(Post), :count)
+        expect {
+          receive_post(retraction, :from => alice, :by => bob)
+        }.to raise_error Diaspora::AuthorXMLAuthorMismatch
+      }.to_not change(bob.visible_shareables(Post), :count)
 
     end
 
@@ -208,8 +227,8 @@ describe "attack vectors" do
       end
 
       expect{
-        receive(retraction, :from => alice, :by => bob)
-      }.should_not change{bob.reload.contacts.count}
+        receive_post(retraction, :from => alice, :by => bob)
+      }.to_not change{bob.reload.contacts.count}
     end
 
     it 'it should not allow you to send retractions with xml and salmon handle mismatch' do
@@ -220,15 +239,15 @@ describe "attack vectors" do
       end
 
       expect{
-        expect_error /Author does not match XML author/ do
-          receive(retraction, :from => alice, :by => bob)
-        end
-        }.should_not change(bob.contacts, :count)
+        expect {
+          receive_post(retraction, :from => alice, :by => bob)
+        }.to raise_error Diaspora::AuthorXMLAuthorMismatch
+      }.to_not change(bob.contacts, :count)
     end
 
     it 'does not let another user update other persons post' do
       original_message = eve.post(:photo, :user_file => uploaded_photo, :text => "store this!", :to => eves_aspect.id)
-      receive(original_message, :from => eve, :by => bob)
+      receive_post(original_message, :from => eve, :by => bob)
 
       #is this testing two things?
       new_message = original_message.dup
@@ -236,8 +255,8 @@ describe "attack vectors" do
       new_message.text = "bad bad bad"
 
       expect{
-        receive(new_message, :from => alice, :by => bob)
-       }.should_not change(original_message, :text)
+        receive_post(new_message, :from => alice, :by => bob)
+       }.to_not change(original_message, :text)
     end
   end
 end

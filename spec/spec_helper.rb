@@ -2,12 +2,7 @@
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
-require 'rubygems'
-require 'spork'
-#uncomment the following line to use spork with the debugger
-#require 'spork/ext/ruby-debug'
-
-Spork.prefork do
+prefork = proc do
   # Loading more in this block will cause your tests to run faster. However,
   # if you change any configuration or code from libraries loaded here, you'll
   # need to restart spork for it take effect.
@@ -16,12 +11,13 @@ Spork.prefork do
   #Spork.trap_method(Rails::Application::RoutesReloader, :reload!)
 
   ENV["RAILS_ENV"] ||= 'test'
-  require File.join(File.dirname(__FILE__), '..', 'config', 'environment') unless defined?(Rails)
-  require 'helper_methods'
-  require 'spec-doc'
+  require File.join(File.dirname(__FILE__), '..', 'config', 'environment')
+  require Rails.root.join('spec', 'helper_methods')
+  require Rails.root.join('spec', 'spec-doc')
   require 'rspec/rails'
   require 'webmock/rspec'
   require 'factory_girl'
+  require 'sidekiq/testing'
 
   include HelperMethods
 
@@ -65,7 +61,7 @@ Spork.prefork do
   end
 
   # Force fixture rebuild
-  FileUtils.rm_f(File.join(Rails.root, 'tmp', 'fixture_builder.yml'))
+  FileUtils.rm_f(Rails.root.join('tmp', 'fixture_builder.yml'))
 
   # Requires supporting files with custom matchers and macros, etc,
   # in ./support/ and its subdirectories.
@@ -98,10 +94,14 @@ Spork.prefork do
   end
 end
 
-Spork.each_run do
-  # This code will be run each time you run your specs.
-  AppConfig.load!
-  AppConfig.setup!
+begin
+  require 'spork'
+  #uncomment the following line to use spork with the debugger
+  #require 'spork/ext/ruby-debug'
+
+  Spork.prefork(&prefork)
+rescue LoadError
+  prefork.call
 end
 
 # https://makandracards.com/makandra/950-speed-up-rspec-by-deferring-garbage-collection
@@ -110,6 +110,6 @@ RSpec.configure do |config|
     DeferredGarbageCollection.start
   end
   config.after(:all) do
-    DeferredGarbageCollection.reconsider 
+    DeferredGarbageCollection.reconsider
   end
 end

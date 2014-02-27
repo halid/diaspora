@@ -3,8 +3,6 @@
 #   the COPYRIGHT file.
 
 class Photo < ActiveRecord::Base
-  require 'carrierwave/orm/activerecord'
-
   include Diaspora::Federated::Shareable
   include Diaspora::Commentable
   include Diaspora::Shareable
@@ -41,14 +39,14 @@ class Photo < ActiveRecord::Base
 
   belongs_to :status_message, :foreign_key => :status_message_guid, :primary_key => :guid
   validates_associated :status_message
+  delegate :author_name, to: :status_message, prefix: true
 
-  attr_accessible :text, :pending
   validate :ownership_of_status_message
 
   before_destroy :ensure_user_picture
   after_destroy :clear_empty_status_message
 
-  after_create do
+  after_commit :on => :create do
     queue_processing_job if self.author.local?
   end
 
@@ -70,7 +68,7 @@ class Photo < ActiveRecord::Base
   end
 
   def self.diaspora_initialize(params = {})
-    photo = self.new params.to_hash
+    photo = self.new params.to_hash.slice(:text, :pending)
     photo.author = params[:author]
     photo.public = params[:public] if params[:public]
     photo.pending = params[:pending] if params[:pending]
@@ -98,9 +96,7 @@ class Photo < ActiveRecord::Base
 
   def update_remote_path
     unless self.unprocessed_image.url.match(/^https?:\/\//)
-      pod_url = AppConfig[:pod_url].dup
-      pod_url.chop! if AppConfig[:pod_url][-1,1] == '/'
-      remote_path = "#{pod_url}#{self.unprocessed_image.url}"
+      remote_path = "#{AppConfig.pod_uri.to_s.chomp("/")}#{self.unprocessed_image.url}"
     else
       remote_path = self.unprocessed_image.url
     end
@@ -129,12 +125,8 @@ class Photo < ActiveRecord::Base
     }
   end
 
-  def thumb_hash
-    {:thumb_url => url(:thumb_medium), :id => id, :album_id => nil}
-  end
-
   def queue_processing_job
-    Resque.enqueue(Jobs::ProcessPhoto, self.id)
+    Workers::ProcessPhoto.perform_async(self.id)
   end
 
   def mutable?

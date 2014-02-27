@@ -22,6 +22,10 @@ class Comment < ActiveRecord::Base
   belongs_to :commentable, :touch => true, :polymorphic => true
   alias_attribute :post, :commentable
   belongs_to :author, :class_name => 'Person'
+  
+  delegate :name, to: :author, prefix: true
+  delegate :comment_email_subject, to: :parent
+  delegate :author_name, to: :parent, prefix: true
 
   validates :text, :presence => true, :length => {:maximum => 65535}
   validates :parent, :presence => true #should be in relayable (pending on fixing Message)
@@ -37,7 +41,7 @@ class Comment < ActiveRecord::Base
     self.post.touch
   end
 
-  after_create do
+  after_commit :on => :create do
     self.parent.update_comments_counter
   end
 
@@ -73,6 +77,10 @@ class Comment < ActiveRecord::Base
 
   def parent= parent
     self.post = parent
+  end
+
+  def text= text
+     self[:text] = text.to_s.strip #to_s if for nil, for whatever reason
   end
 
   class Generator < Federated::Generator

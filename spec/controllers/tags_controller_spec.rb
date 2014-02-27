@@ -36,6 +36,17 @@ describe TagsController do
   end
 
   describe '#show' do
+    context 'tag with capital letters' do
+      before do
+        sign_in :user, alice
+      end
+
+      it 'redirect to the downcase tag uri' do
+        get :show, :name => 'DiasporaRocks!'
+        response.should redirect_to(:action => :show, :name => 'diasporarocks!')
+      end
+    end
+
     context 'signed in' do
       before do
         sign_in :user, alice
@@ -81,11 +92,11 @@ describe TagsController do
 
       it 'returns true if the following already exists and should be case insensitive' do
         TagFollowing.create!(:tag => @tag, :user => bob )
-        @controller.tag_followed?.should be_true
+        @controller.send(:tag_followed?).should be_true
       end
 
       it 'returns false if the following does not already exist' do
-        @controller.tag_followed?.should be_false
+        @controller.send(:tag_followed?).should be_false
       end
     end
   end

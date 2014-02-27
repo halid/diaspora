@@ -7,7 +7,8 @@ describe ResharesController do
     }
 
     before do
-      @post_guid = Factory(:status_message, :public => true).guid
+      @post = FactoryGirl.create(:status_message, :public => true)
+      @post_guid = @post.guid
     end
 
     it 'requires authentication' do
@@ -29,7 +30,7 @@ describe ResharesController do
       it 'creates a reshare' do
         expect{
           post_request!
-        }.should change(Reshare, :count).by(1)
+        }.to change(Reshare, :count).by(1)
       end
 
       it 'after save, calls add to streams' do
@@ -40,6 +41,18 @@ describe ResharesController do
       it 'calls dispatch' do
         bob.should_receive(:dispatch_post).with(anything, hash_including(:additional_subscribers))
         post_request!
+      end
+
+      context 'resharing a reshared post' do
+        before do
+          FactoryGirl.create(:reshare, :root => @post, :author => bob.person)
+        end
+
+        it 'doesn\'t allow the user to reshare the post again' do
+          post_request!
+          response.code.should == '422'
+          response.body.strip.should be_empty
+        end
       end
     end
   end

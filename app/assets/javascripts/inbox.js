@@ -6,14 +6,35 @@
 
 $(document).ready(function(){
 
-  $('a.conversation').live('click', function(){
-    $.getScript(this.href, function() {
+  if ($('#first_unread').length > 0) {
+    $("html").scrollTop($('#first_unread').offset().top-45);
+  }
+
+  $('time.timeago').each(function(i,e) {
+    var jqe = $(e);
+    jqe.attr('data-original-title', new Date(jqe.attr('datetime')).toLocaleString());
+    jqe.attr('title', '');
+  });
+
+  $('.timeago').tooltip();
+  $('.timeago').timeago();
+
+  $('time.timeago').each(function(i,e) {
+    var jqe = $(e);
+    jqe.attr('title', '');
+  });
+
+  $('.conversation-wrapper').live('click', function(){
+    var conversation_path = $(this).data('conversation-path');
+
+    $.getScript(conversation_path, function() {
       Diaspora.page.directionDetector.updateBinds();
     });
-    history.pushState(null, "", this.href);
+
+    history.pushState(null, "", conversation_path);
 
     var conv = $(this).children('.stream_element'),
-        cBadge = $("#message_inbox_badge").children(".badge_count");
+        cBadge = $("#message_inbox_badge .badge_count");
     if(conv.hasClass('unread') ){
       conv.removeClass('unread');
     }
@@ -27,7 +48,6 @@ $(document).ready(function(){
       });
     }
 
-    jQuery("abbr.timeago").timeago();
     return false;
   });
 
@@ -38,11 +58,6 @@ $(document).ready(function(){
       });
       return false;
     }
-  });
-
-  resize();
-  $(window).resize(function(){
-    resize();
   });
 
   $('#conversation_inbox .stream').infinitescroll({
@@ -58,7 +73,7 @@ $(document).ready(function(){
     loadingText: "",
     loadingImg: '/assets/ajax-loader.gif'
   }, function(){
-    $('.conversation', '.stream').bind('mousedown', function(){
+    $('.conversation-wrapper', '.stream').bind('mousedown', function(){
       bindIt($(this));
     });
   });
@@ -84,11 +99,3 @@ $(document).ready(function(){
      });
   });
 });
-
-var resize = function(){
-  var inboxSidebar = $('#conversation_inbox'),
-      inboxSidebarOffset = inboxSidebar.offset().top,
-      windowHeight = $(window).height();
-
-  inboxSidebar.css('height', windowHeight - inboxSidebarOffset);
-};

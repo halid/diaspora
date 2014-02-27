@@ -1,6 +1,8 @@
 module NavigationHelpers
   def path_to(page_name)
     case page_name
+      when /^person_photos page$/
+         person_photos_path(@me.person)
       when /^the home(?: )?page$/
         stream_path
       when /^step (\d)$/
@@ -24,13 +26,19 @@ module NavigationHelpers
       when /^the requestors profile$/
         person_path(Request.where(:recipient_id => @me.person.id).first.sender)
       when /^"([^\"]*)"'s page$/
-        person_path(User.find_by_email($1).person)
+        p = User.find_by_email($1).person
+        { path: person_path(p),
+          # '.diaspora_handle' on desktop, '.description' on mobile
+          special_elem: { selector: '.diaspora_handle, .description', text: p.diaspora_handle }
+        }
       when /^my account settings page$/
         edit_user_path
       when /^my new profile page$/
         person_path(@me.person,  :ex => true)
       when /^the new stream$/
         stream_path(:ex => true)
+      when /^forgot password page$/
+          new_user_password_path
       when /^"(\/.*)"/
         $1
       else
@@ -40,6 +48,22 @@ module NavigationHelpers
 
   def login_page
     path_to "the new user session page"
+  end
+
+  def post_path_by_content(text)
+    p = Post.find_by_text(text)
+    post_path(p)
+  end
+
+  def navigate_to(page_name)
+    path = path_to(page_name)
+    unless path.is_a?(Hash)
+      visit(path)
+    else
+      visit(path[:path])
+      await_elem = path[:special_elem]
+      find(await_elem.delete(:selector), await_elem)
+    end
   end
 end
 

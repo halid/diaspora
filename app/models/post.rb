@@ -24,13 +24,14 @@ class Post < ActiveRecord::Base
   has_many :resharers, :class_name => 'Person', :through => :reshares, :source => :author
 
   belongs_to :o_embed_cache
+  belongs_to :open_graph_cache
 
-  after_create do
+  after_commit :on => :create do
     self.touch(:interacted_at)
   end
 
   #scopes
-  scope :includes_for_a_stream, includes(:o_embed_cache, {:author => :profile}, :mentions => {:person => :profile}) #note should include root and photos, but i think those are both on status_message
+  scope :includes_for_a_stream, includes(:o_embed_cache, :open_graph_cache, {:author => :profile}, :mentions => {:person => :profile}) #note should include root and photos, but i think those are both on status_message
 
 
   scope :commented_by, lambda { |person|
@@ -65,6 +66,11 @@ class Post < ActiveRecord::Base
   def raw_message; ""; end
   def mentioned_people; []; end
   def photos; []; end
+
+  #prevents error when trying to access @post.address in a post different than Reshare and StatusMessage types;
+  #check PostPresenter
+  def address
+  end
 
   def self.excluding_blocks(user)
     people = user.blocks.map{|b| b.person_id}
@@ -103,11 +109,6 @@ class Post < ActiveRecord::Base
     reshares.where(:author_id => user.person.id).first
   end
 
-  def participation_for(user)
-    return unless user
-    participations.where(:author_id => user.person.id).first
-  end
-
   def like_for(user)
     return unless user
     likes.where(:author_id => user.person.id).first
@@ -116,7 +117,7 @@ class Post < ActiveRecord::Base
   #############
 
   def self.diaspora_initialize(params)
-    new_post = self.new params.to_hash
+    new_post = self.new params.to_hash.stringify_keys.slice(*self.column_names)
     new_post.author = params[:author]
     new_post.public = params[:public] if params[:public]
     new_post.pending = params[:pending] if params[:pending]
@@ -133,10 +134,6 @@ class Post < ActiveRecord::Base
     false
   end
 
-  def triggers_caching?
-    true
-  end
-
   def comment_email_subject
     I18n.t('notifier.a_post_you_shared')
   end
@@ -150,8 +147,11 @@ class Post < ActiveRecord::Base
     post = if user
              user.find_visible_shareable_by_id(Post, id, :key => key)
            else
-             Post.where(key => id, :public => true).includes(:author, :comments => :author).first
+             Post.where(key => id).includes(:author, :comments => :author).first
            end
+
+    # is that a private post?
+    raise(Diaspora::NonPublic) unless user || post.try(:public?)
 
     post || raise(ActiveRecord::RecordNotFound.new("could not find a post with id #{id}"))
   end

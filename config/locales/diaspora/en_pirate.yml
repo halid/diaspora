@@ -1,4 +1,4 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
@@ -328,5 +328,3 @@ en_pirate:
       close_account:
         what_we_delete: "We scuttle all of yer posts, profile data, as soon as humanly possible. Yer comments will hang around, but be associated with yer Diaspora Handle."
       your_handle: "Yer diaspora id"
-    getting_started:
-      what_facebook_does: "t' Diaspora. This will pull yer name 'n photo, 'n enable cross-posting."

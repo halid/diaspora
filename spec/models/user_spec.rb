@@ -5,6 +5,31 @@
 require 'spec_helper'
 
 describe User do
+  context "relations" do
+    context "#conversations" do
+      it "doesn't find anything when there is nothing to find" do
+        u = FactoryGirl.create(:user)
+        u.conversations.should be_empty
+      end
+
+      it "finds the users conversations" do
+        c = FactoryGirl.create(:conversation, { author: alice.person })
+
+        alice.conversations.should include c
+      end
+
+      it "doesn't find other users conversations" do
+        c1 = FactoryGirl.create(:conversation)
+        c2 = FactoryGirl.create(:conversation)
+        c_own = FactoryGirl.create(:conversation, { author: alice.person })
+
+        alice.conversations.should include c_own
+        alice.conversations.should_not include c1
+        alice.conversations.should_not include c2
+      end
+    end
+  end
+
   describe "private key" do
     it 'has a key' do
       alice.encryption_key.should_not be nil
@@ -18,7 +43,71 @@ describe User do
 
       expect{
         user.reload.encryption_key
-      }.should_not raise_error
+      }.to_not raise_error
+    end
+  end
+
+  describe 'yearly_actives' do
+    it 'returns list which includes users who latest signed in within last year' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 1.month
+      user.save
+      User.yearly_actives.should include user
+    end
+
+    it 'returns list which does not include users who did not sign in within last year' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 2.year
+      user.save
+      User.yearly_actives.should_not include user
+    end
+  end
+
+  describe 'monthly_actives' do
+    it 'returns list which includes users who latest signed in within last month' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 1.day
+      user.save
+      User.monthly_actives.should include user
+    end
+
+     it 'returns list which does not include users who did not sign in within last month' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 2.month
+      user.save
+      User.monthly_actives.should_not include user
+    end
+  end
+
+  describe 'daily_actives' do
+    it 'returns list which includes users who latest signed in within last day' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 1.hour
+      user.save
+      User.daily_actives.should include(user)
+    end
+
+    it 'returns list which does not include users who did not sign in within last day' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 2.day
+      user.save
+      User.daily_actives.should_not include(user)
+    end
+  end
+
+  describe 'halfyear_actives' do
+    it 'returns list which includes users who latest signed in within half a year' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 4.month
+      user.save
+      User.halfyear_actives.should include user
+    end
+
+     it 'returns list which does not include users who did not sign in within the last half a year' do
+      user = FactoryGirl.build(:user)
+      user.last_sign_in_at = Time.now - 7.month
+      user.save
+      User.halfyear_actives.should_not include user
     end
   end
 
@@ -39,7 +128,7 @@ describe User do
 
   describe 'hidden_shareables' do
     before do
-      @sm = Factory(:status_message)
+      @sm = FactoryGirl.create(:status_message)
       @sm_id = @sm.id.to_s
       @sm_class = @sm.class.base_class.to_s
     end
@@ -55,7 +144,7 @@ describe User do
       end
 
       it 'handles having multiple posts' do
-        sm2 = Factory(:status_message)
+        sm2 = FactoryGirl.build(:status_message)
         alice.add_hidden_shareable(@sm_class, @sm_id)
         alice.add_hidden_shareable(sm2.class.base_class.to_s, sm2.id.to_s)
 
@@ -63,7 +152,7 @@ describe User do
       end
 
       it 'handles having multiple shareable types' do
-        photo = Factory(:photo)
+        photo = FactoryGirl.create(:photo)
         alice.add_hidden_shareable(photo.class.base_class.to_s, photo.id.to_s)
         alice.add_hidden_shareable(@sm_class, @sm_id)
 
@@ -94,13 +183,13 @@ describe User do
 
     describe '#is_shareable_hidden?' do
       it 'returns true if the shareable is hidden' do
-        post = Factory(:status_message)
+        post = FactoryGirl.create(:status_message)
         bob.toggle_hidden_shareable(post)
         bob.is_shareable_hidden?(post).should be_true
       end
 
       it 'returns false if the shareable is not present' do
-        post = Factory(:status_message)
+        post = FactoryGirl.create(:status_message)
         bob.is_shareable_hidden?(post).should be_false
       end
     end
@@ -110,7 +199,7 @@ describe User do
   describe 'overwriting people' do
     it 'does not overwrite old users with factory' do
       lambda {
-        new_user = Factory(:user, :id => alice.id)
+        new_user = FactoryGirl.create(:user, :id => alice.id)
       }.should raise_error ActiveRecord::StatementInvalid
     end
 
@@ -160,14 +249,14 @@ describe User do
       end
 
       it 'requires uniqueness also amount Person objects with diaspora handle' do
-        p = Factory(:person, :diaspora_handle => "jimmy#{User.diaspora_id_host}")
+        p = FactoryGirl.create(:person, :diaspora_handle => "jimmy#{User.diaspora_id_host}")
         alice.username = 'jimmy'
         alice.should_not be_valid
 
       end
 
       it "downcases username" do
-        user = Factory.build(:user, :username => "WeIrDcAsE")
+        user = FactoryGirl.build(:user, :username => "WeIrDcAsE")
         user.should be_valid
         user.username.should == "weirdcase"
       end
@@ -178,7 +267,7 @@ describe User do
       end
 
       it "strips leading and trailing whitespace" do
-        user = Factory.build(:user, :username => "      janie   ")
+        user = FactoryGirl.build(:user, :username => "      janie   ")
         user.should be_valid
         user.username.should == "janie"
       end
@@ -338,7 +427,7 @@ describe User do
     end
 
     describe "with malicious params" do
-      let(:person) {Factory :person}
+      let(:person) {FactoryGirl.create :person}
       before do
         @invalid_params = {:username => "ohai",
                   :email => "ohai@example.com",
@@ -359,32 +448,10 @@ describe User do
     end
   end
 
-  describe "#can_add?" do
-    it "returns true if there is no existing connection" do
-      alice.can_add?(eve.person).should be_true
-    end
-
-    it "returns false if the user and the person are the same" do
-      alice.can_add?(alice.person).should be_false
-    end
-
-    it "returns false if the users are already connected" do
-      alice.can_add?(bob.person).should be_false
-    end
-
-    it "returns false if the user has already sent a request to that person" do
-      alice.share_with(eve.person, alice.aspects.first)
-      alice.reload
-      eve.reload
-      alice.can_add?(eve.person).should be_false
-    end
-  end
-
-
   describe '#process_invite_acceptence' do
     it 'sets the inviter on user' do
       inv = InvitationCode.create(:user => bob)
-      user = Factory(:user)
+      user = FactoryGirl.build(:user)
       user.process_invite_acceptence(inv)
       user.invited_by_id.should == bob.id
     end
@@ -440,7 +507,7 @@ describe User do
     end
 
     it 'dispatches the profile when tags are set' do
-      @params = {:tags => '#what #hey'}
+      @params = {:tag_string => '#what #hey'}
       mailman = Postzord::Dispatcher.build(alice, Profile.new)
       Postzord::Dispatcher.should_receive(:build).and_return(mailman)
       alice.update_profile(@params).should be_true
@@ -503,7 +570,7 @@ describe User do
 
   describe '#notify_if_mentioned' do
     before do
-      @post = Factory(:status_message, :author => bob.person)
+      @post = FactoryGirl.build(:status_message, :author => bob.person)
     end
 
     it 'notifies the user if the incoming post mentions them' do
@@ -521,7 +588,7 @@ describe User do
     end
 
     it 'does not notify the user if the post author is not a contact' do
-      @post = Factory(:status_message, :author => eve.person)
+      @post = FactoryGirl.build(:status_message, :author => eve.person)
       @post.stub(:mentions?).and_return(true)
       @post.should_not_receive(:notify_person)
 
@@ -532,7 +599,7 @@ describe User do
   describe 'account deletion' do
     describe '#destroy' do
       it 'removes invitations from the user' do
-        Factory(:invitation, :sender => alice)
+        FactoryGirl.create(:invitation, :sender => alice)
         lambda {
           alice.destroy
         }.should change {alice.invitations_from_me(true).count }.by(-1)
@@ -561,22 +628,22 @@ describe User do
       alice.disable_mail = false
       alice.save
 
-      Resque.should_receive(:enqueue).with(Jobs::Mail::StartedSharing, alice.id, 'contactrequestid').once
-      alice.mail(Jobs::Mail::StartedSharing, alice.id, 'contactrequestid')
+      Workers::Mail::StartedSharing.should_receive(:perform_async).with(alice.id, 'contactrequestid').once
+      alice.mail(Workers::Mail::StartedSharing, alice.id, 'contactrequestid')
     end
 
-    it 'does not enqueue a mail job if the correct corresponding job has a prefrence entry' do
+    it 'does not enqueue a mail job if the correct corresponding job has a preference entry' do
       alice.user_preferences.create(:email_type => 'started_sharing')
-      Resque.should_not_receive(:enqueue)
-      alice.mail(Jobs::Mail::StartedSharing, alice.id, 'contactrequestid')
+      Workers::Mail::StartedSharing.should_not_receive(:perform_async)
+      alice.mail(Workers::Mail::StartedSharing, alice.id, 'contactrequestid')
     end
 
     it 'does not send a mail if disable_mail is set to true' do
        alice.disable_mail = true
        alice.save
        alice.reload
-       Resque.should_not_receive(:enqueue)
-      alice.mail(Jobs::Mail::StartedSharing, alice.id, 'contactrequestid')
+       Workers::Mail::StartedSharing.should_not_receive(:perform_async)
+      alice.mail(Workers::Mail::StartedSharing, alice.id, 'contactrequestid')
     end
   end
 
@@ -695,12 +762,12 @@ describe User do
     describe '#mail_confirm_email' do
       it 'enqueues a mail job on user with unconfirmed email' do
         user.update_attribute(:unconfirmed_email, "alice@newmail.com")
-        Resque.should_receive(:enqueue).with(Jobs::Mail::ConfirmEmail, alice.id).once
+        Workers::Mail::ConfirmEmail.should_receive(:perform_async).with(alice.id).once
         alice.mail_confirm_email.should eql(true)
       end
 
       it 'enqueues NO mail job on user without unconfirmed email' do
-        Resque.should_not_receive(:enqueue).with(Jobs::Mail::ConfirmEmail, alice.id)
+        Workers::Mail::ConfirmEmail.should_not_receive(:perform_async).with(alice.id)
         alice.mail_confirm_email.should eql(false)
       end
     end
@@ -768,8 +835,8 @@ describe User do
 
   describe '#retract' do
     before do
-      @retraction = mock
-      @post = Factory(:status_message, :author => bob.person, :public => true)
+      @retraction = double
+      @post = FactoryGirl.build(:status_message, :author => bob.person, :public => true)
     end
 
     context "posts" do
@@ -779,7 +846,7 @@ describe User do
       end
 
       it 'sends a retraction' do
-        dispatcher = mock
+        dispatcher = double
         Postzord::Dispatcher.should_receive(:build).with(bob, @retraction, anything()).and_return(dispatcher)
         dispatcher.should_receive(:post)
 
@@ -787,12 +854,12 @@ describe User do
       end
 
       it 'adds resharers of target post as additional subsctibers' do
-        person = Factory(:person)
-        reshare = Factory(:reshare, :root => @post, :author => person)
+        person = FactoryGirl.create(:person)
+        reshare = FactoryGirl.create(:reshare, :root => @post, :author => person)
         @post.reshares << reshare
 
-        dispatcher = mock
-        Postzord::Dispatcher.should_receive(:build).with(bob, @retraction, {:additional_subscribers => [person]}).and_return(dispatcher)
+        dispatcher = double
+        Postzord::Dispatcher.should_receive(:build).with(bob, @retraction, {:additional_subscribers => [person], :services => anything}).and_return(dispatcher)
         dispatcher.should_receive(:post)
 
         bob.retract(@post)
@@ -801,24 +868,66 @@ describe User do
   end
 
   describe "#send_reset_password_instructions" do
-    it "generates a reset password token if it's supposed to" do
-      user = User.new
-      user.stub!(:should_generate_token?).and_return(true)
-      user.should_receive(:generate_reset_password_token)
-      user.send_reset_password_instructions
-    end
-
-    it "does not generate a reset password token if it's not supposed to" do
-      user = User.new
-      user.stub!(:should_generate_token?).and_return(false)
-      user.should_not_receive(:generate_reset_password_token)
-      user.send_reset_password_instructions
-    end
-
     it "queues up a job to send the reset password instructions" do
-      user = Factory :user
-      Resque.should_receive(:enqueue).with(Jobs::ResetPassword, user.id)
+      user = FactoryGirl.create :user
+      Workers::ResetPassword.should_receive(:perform_async).with(user.id)
       user.send_reset_password_instructions
+    end
+  end
+
+  describe "#seed_aspects" do
+    describe "create aspects" do
+      let(:user) {
+        user = FactoryGirl.create(:user)
+        user.seed_aspects
+        user
+      }
+
+      [I18n.t('aspects.seed.family'), I18n.t('aspects.seed.friends'),
+       I18n.t('aspects.seed.work'), I18n.t('aspects.seed.acquaintances')].each do |aspect_name|
+        it "creates an aspect named #{aspect_name} for the user" do
+          user.aspects.find_by_name(aspect_name).should_not be_nil
+        end
+      end
+    end
+
+    describe "autofollow sharing" do
+      let(:user) {
+        FactoryGirl.create(:user)
+      }
+
+      before(:each) do
+        @old_autofollow_value = AppConfig.settings.autofollow_on_join?
+        @old_autofollow_user = AppConfig.settings.autofollow_on_join_user
+      end
+
+      after(:each) do
+        AppConfig.settings.autofollow_on_join = @old_followhq_value
+        AppConfig.settings.autofollow_on_join_user = @old_autofollow_user
+      end
+
+      context "with autofollow sharing enabled" do
+        it "should start sharing with autofollow account" do
+          AppConfig.settings.autofollow_on_join = true
+          AppConfig.settings.autofollow_on_join_user = 'one'
+
+          wf_double = double
+          wf_double.should_receive(:fetch)
+          Webfinger.should_receive(:new).with('one').and_return(wf_double)
+
+          user.seed_aspects
+        end
+      end
+
+      context "with sharing with diasporahq enabled" do
+        it "should not start sharing with the diasporahq account" do
+          AppConfig.settings.autofollow_on_join = false
+
+          Webfinger.should_not_receive(:new)
+
+          user.seed_aspects
+        end
+      end
     end
   end
 
@@ -867,13 +976,13 @@ describe User do
 
     describe "#clearable_attributes" do
       it 'returns the clearable fields' do
-        user = Factory :user
+        user = FactoryGirl.create :user
         user.send(:clearable_fields).sort.should == %w{
           language
           invitation_token
           invitation_sent_at
+          reset_password_sent_at
           reset_password_token
-          remember_token
           remember_created_at
           sign_in_count
           current_sign_in_at
@@ -893,6 +1002,36 @@ describe User do
           confirm_email_token
         }.sort
       end
+    end
+  end
+  
+  describe "sign up" do
+    before do
+      params = {:username => "ohai",
+                :email => "ohai@example.com",
+                :password => "password",
+                :password_confirmation => "password",
+                :captcha => "12345",
+                
+                :person =>
+                  {:profile =>
+                    {:first_name => "O",
+                     :last_name => "Hai"}
+                  }
+      }
+      @user = User.build(params)
+    end
+
+    it "saves with captcha off" do
+      AppConfig.settings.captcha.enable = false
+      @user.should_receive(:save).and_return(true)
+      @user.sign_up
+    end
+
+    it "saves with captcha on" do
+      AppConfig.settings.captcha.enable = true
+      @user.should_receive(:save_with_captcha).and_return(true)
+      @user.sign_up
     end
   end
 end

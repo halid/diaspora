@@ -10,7 +10,7 @@ class AspectsController < ApplicationController
              :json
 
   def create
-    @aspect = current_user.aspects.build(params[:aspect])
+    @aspect = current_user.aspects.build(aspect_params)
     aspecting_person_id = params[:aspect][:person_id]
 
     if @aspect.save
@@ -31,16 +31,6 @@ class AspectsController < ApplicationController
           redirect_to :back
         end
       end
-    end
-  end
-
-  #person_id, user, @aspect
-  def connect_person_to_aspect(aspecting_person_id)
-    @person = Person.find(aspecting_person_id)
-    if @contact = current_user.contact_for(@person)
-      @contact.aspects << @aspect
-    else
-      @contact = current_user.share_with(@person, @aspect)
     end
   end
 
@@ -91,7 +81,7 @@ class AspectsController < ApplicationController
     @contacts = @contacts_in_aspect + @contacts_not_in_aspect
 
     unless @aspect
-      render :file => "#{Rails.root}/public/404.html", :layout => false, :status => 404
+      render :file => Rails.root.join('public', '404.html').to_s, :layout => false, :status => 404
     else
       @aspect_ids = [@aspect.id]
       @aspect_contacts_count = @aspect.contacts.size
@@ -102,7 +92,7 @@ class AspectsController < ApplicationController
   def update
     @aspect = current_user.aspects.where(:id => params[:id]).first
 
-    if @aspect.update_attributes!(params[:aspect])
+    if @aspect.update_attributes!(aspect_params)
       flash[:notice] = I18n.t 'aspects.update.success', :name => @aspect.name
     else
       flash[:error] = I18n.t 'aspects.update.failure', :name => @aspect.name
@@ -119,5 +109,20 @@ class AspectsController < ApplicationController
       @aspect.contacts_visible = true
     end
     @aspect.save
+  end
+
+  private
+
+  def connect_person_to_aspect(aspecting_person_id)
+    @person = Person.find(aspecting_person_id)
+    if @contact = current_user.contact_for(@person)
+      @contact.aspects << @aspect
+    else
+      @contact = current_user.share_with(@person, @aspect)
+    end
+  end
+
+  def aspect_params
+    params.require(:aspect).permit(:name, :contacts_visible, :order_id)
   end
 end

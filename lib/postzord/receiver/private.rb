@@ -2,9 +2,6 @@
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
-require File.join(Rails.root, 'lib/webfinger')
-require File.join(Rails.root, 'lib/diaspora/parser')
-
 class Postzord::Receiver::Private < Postzord::Receiver
 
   def initialize(user, opts={})
@@ -28,7 +25,7 @@ class Postzord::Receiver::Private < Postzord::Receiver
       end
     rescue => e
       #this sucks
-      FEDERATION_LOGGER.info("Failure to receive #{@object.inspect} for sender:#{@sender.id} for user:#{@user.id}: #{e.message}")
+      FEDERATION_LOGGER.error("Failure to receive #{@object.class} from sender:#{@sender.id} for user:#{@user.id}: #{e.message}\n#{@object.inspect}")
       raise e
     end
   end
@@ -42,9 +39,9 @@ class Postzord::Receiver::Private < Postzord::Receiver
     if self.validate_object
       set_author!
       receive_object
-      FEDERATION_LOGGER.info("object received #{@object.class}")
+      FEDERATION_LOGGER.info("object received: [#{@object.class}#{@object.respond_to?(:text) ? ":'#{@object.text}'" : ''}]")
     else
-      FEDERATION_LOGGER.info("failed to receive object from #{@object.author}: #{@object.inspect}")
+      FEDERATION_LOGGER.error("failed to receive object from #{@object.author}: #{@object.inspect}")
       raise "not a valid object:#{@object.inspect}"
     end
   end
@@ -53,7 +50,7 @@ class Postzord::Receiver::Private < Postzord::Receiver
   def receive_object
     obj = @object.receive(@user, @author)
     Notification.notify(@user, obj, @author) if obj.respond_to?(:notification_type)
-    FEDERATION_LOGGER.info("user:#{@user.id} successfully received private post from person#{@sender.guid} #{@object.inspect}")
+    FEDERATION_LOGGER.info("user:#{@user.id} successfully received private post from person #{@sender.guid}: #{@object.inspect}")
     obj
   end
 
@@ -62,10 +59,21 @@ class Postzord::Receiver::Private < Postzord::Receiver
     @salmon ||= Salmon::EncryptedSlap.from_xml(@salmon_xml, @user)
   end
 
+  def validate_object
+    raise Diaspora::ContactRequiredUnlessRequest if contact_required_unless_request
+    raise Diaspora::RelayableObjectWithoutParent if relayable_without_parent?
+
+    assign_sender_handle_if_request
+
+    raise Diaspora::AuthorXMLAuthorMismatch if author_does_not_match_xml_author?
+
+    @object
+  end
+
   def xml_author
     if @object.respond_to?(:relayable?)
       #if A and B are friends, and A sends B a comment from C, we delegate the validation to the owner of the post being commented on
-      xml_author = @user.owns?(@object.parent) ? @object.diaspora_handle : @object.parent.author.diaspora_handle
+      xml_author = @user.owns?(@object.parent) ? @object.diaspora_handle : @object.parent_author.diaspora_handle
       @author = Webfinger.new(@object.diaspora_handle).fetch if @object.author
     else
       xml_author = @object.diaspora_handle
@@ -73,16 +81,6 @@ class Postzord::Receiver::Private < Postzord::Receiver
     xml_author
   end
 
-  def validate_object
-    raise "Contact required unless request" if contact_required_unless_request
-    raise "Relayable object, but no parent object found" if relayable_without_parent?
-
-    assign_sender_handle_if_request
-
-    raise "Author does not match XML author" if author_does_not_match_xml_author?
-
-    @object
-  end
 
   def set_author!
     return unless @author
@@ -95,21 +93,14 @@ class Postzord::Receiver::Private < Postzord::Receiver
   #validations
   def relayable_without_parent?
     if @object.respond_to?(:relayable?) && @object.parent.nil?
-      FEDERATION_LOGGER.info("event=receive status=abort reason='received a comment but no corresponding post' recipient=#{@user_person.diaspora_handle} sender=#{@sender.diaspora_handle} payload_type=#{@object.class})")
-      return true
-    end
-  end
-
-  def author_does_not_match_xml_author?
-    if (@author.diaspora_handle != xml_author)
-      FEDERATION_LOGGER.info("event=receive status=abort reason='author in xml does not match retrieved person' payload_type=#{@object.class} recipient=#{@user_person.diaspora_handle} sender=#{@sender.diaspora_handle}")
+      FEDERATION_LOGGER.error("event=receive status=abort reason='received a comment but no corresponding post' recipient=#{@user_person.diaspora_handle} sender=#{@sender.diaspora_handle} payload_type=#{@object.class})")
       return true
     end
   end
 
   def contact_required_unless_request
     unless @object.is_a?(Request) || @user.contact_for(@sender)
-      FEDERATION_LOGGER.info("event=receive status=abort reason='sender not connected to recipient' recipient=#{@user_person.diaspora_handle} sender=#{@sender.diaspora_handle}")
+      FEDERATION_LOGGER.error("event=receive status=abort reason='sender not connected to recipient' recipient=#{@user_person.diaspora_handle} sender=#{@sender.diaspora_handle}")
       return true 
     end
   end

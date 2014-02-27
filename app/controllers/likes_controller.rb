@@ -2,8 +2,6 @@
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
-require Rails.root.join("app", "presenters", "post_presenter")
-
 class LikesController < ApplicationController
   include ApplicationHelper
   before_filter :authenticate_user!
@@ -46,7 +44,7 @@ class LikesController < ApplicationController
     end
   end
 
-  protected
+  private
 
   def target
     @target ||= if params[:post_id]

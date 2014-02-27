@@ -16,16 +16,16 @@ describe RegistrationsController do
       :password_confirmation => "password"
       }
     }
-    Webfinger.stub_chain(:new, :fetch).and_return(Factory(:person))
+    Webfinger.stub_chain(:new, :fetch).and_return(FactoryGirl.create(:person))
   end
 
   describe '#check_registrations_open!' do
     before do
-      AppConfig[:registrations_closed] = true
+      AppConfig.settings.enable_registrations = false
     end
 
     after do
-      AppConfig[:registrations_closed] = false
+      AppConfig.settings.enable_registrations = true
     end
 
     it 'redirects #new to the login page' do
@@ -52,17 +52,14 @@ describe RegistrationsController do
     end
   end
 
-
-
   describe "#create" do
+    render_views
+    
     context "with valid parameters" do
       before do
-        AppConfig[:registrations_closed] = false
-      end
-
-      before do
-        user = Factory.build(:user)
-        User.stub!(:build).and_return(user)
+        AppConfig.settings.enable_registrations = true
+        user = FactoryGirl.build(:user)
+        User.stub(:build).and_return(user)
       end
 
       it "creates a user" do
@@ -84,13 +81,7 @@ describe RegistrationsController do
       it "redirects to the home path" do
         get :create, @valid_params
         response.should be_redirect
-        response.location.should match /^#{root_url}\??$/
-      end
-
-      it 'with an invite code from a beta users, make the user beta' do
-        Role.add_beta(bob.person)
-        get :create, @valid_params.merge(:invite => {:token => bob.invitation_code.token})
-        User.last.should be_beta
+        response.location.should match /^#{stream_url}\??$/
       end
     end
 
@@ -118,9 +109,14 @@ describe RegistrationsController do
         flash[:error].should_not be_blank
       end
 
-      it "re-renders the form" do
+      it "renders new" do
         get :create, @invalid_params
-        response.should render_template("registrations/new")
+        expect(response).to render_template("registrations/new")
+      end
+      
+      it "keeps invalid params in form" do
+        get :create, @invalid_params
+        expect(response.body).to match /jdoe@example.com/m
       end
     end
   end

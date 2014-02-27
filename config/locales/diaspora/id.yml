@@ -1,33 +1,59 @@
-#   Copyright (c) 2010-2012, Diaspora Inc.  This file is
+#   Copyright (c) 2010-2013, Diaspora Inc.  This file is
 #   licensed under the Affero General Public License version 3 or later.  See
 #   the COPYRIGHT file.
 
 
 
 id:
+  _comments: "Komentar"
+  _contacts: "Kontak"
+  _home: "Beranda"
   _photos: "foto"
   _services: "Layanan"
   account: "Akun"
   activerecord:
     errors:
       models:
+        contact:
+          attributes:
+            person_id:
+              taken: "harus unik dari kontak lain"
+        person:
+          attributes:
+            diaspora_handle:
+              taken: "sudah dipakai"
+        request:
+          attributes:
+            from_id:
+              taken: "ada duplikasi dengan permintaan sebelumnya."
         reshare:
           attributes:
             root_guid:
               taken: "You've already reshared that post!"
         user:
           attributes:
+            email:
+              taken: "sudah dipakai"
+            person:
+              invalid: "Tidak Valid"
             username:
-              invalid: "is invalid. We only allow letters, numbers, and underscores"
+              invalid: "tidak valid. Hanya boleh huruf, angka dan garis bawah."
+              taken: "sudah dipakai"
   ago: "%{time} yang lalu"
-  all_aspects: "All aspects"
+  all_aspects: "Semua Hal"
   application:
     helper:
       unknown_person: "orang tak dikenal"
+      video_title:
+        unknown: "Judul Video Tidak Diketahui"
+  are_you_sure: "Anda yakin?"
+  are_you_sure_delete_account: "Anda yakin akan menghapus akun anda? ini tidak dapat di batalkan!"
   aspects:
     add_to_aspect:
       failure: "Failed to add friend to aspect."
       success: "Successfully added friend to aspect."
+    aspect_contacts:
+      done_editing: "Selesai"
     create:
       failure: "Aspek gagal dibuat."
       success: "Klik pada tanda plus di sisi kiri untuk memberitahu Diaspora siapa yang dapat melihat aspek baru Anda."
@@ -35,6 +61,8 @@ id:
       success: "%{name} berhasil dihapus."
     edit:
       make_aspect_list_visible: "make aspect list visible?"
+      update: "Perbarui"
+      updating: "Memperbarui"
     few: "%{count} aspects"
     helper:
       aspect_not_empty: "Aspek tidak kosong"
@@ -59,7 +87,8 @@ id:
     two: "%{count} aspects"
     update:
       success: "Aspek anda, %{name}, telah berhasil diubah."
-    zero: "no aspects"
+    zero: "Tak ada apapun yang di pilih"
+  back: "Kembali"
   bookmarklet:
     explanation: "%{link} from anywhere by bookmarking this link."
     heading: "Diaspora Bookmarklet"
@@ -89,7 +118,8 @@ id:
     helper:
       correct_the_following_errors_and_try_again: "Perbaiki kesalahan berikut dan coba lagi."
       invalid_fields: "Field tidak valid"
-  find_people: "Find people"
+  find_people: "Temukan orang"
+  hide: "Sembunyikan"
   invitations:
     check_token:
       not_found: "Token undangan tidak ditemukan"
@@ -133,6 +163,10 @@ id:
         other: "%{count} likes"
         two: "%{count} likes"
         zero: "no likes"
+  limited: "Terbatas"
+  more: "lainnya"
+  next: "Selanjutnya"
+  no_results: "Tidak ada hasil yang ditemukan."
   notifications:
     also_commented:
       few: "%{actors} also commented on %{post_author}'s %{post_link}."
@@ -240,6 +274,7 @@ id:
       subject: "A message from your Diaspora administrator:"
     started_sharing:
       subject: "%{name} has started sharing with you on Diaspora*"
+  nsfw: "Konten Dewasa"
   ok: "Oke"
   or: "atau"
   password: "Kata sandi"
@@ -287,10 +322,15 @@ id:
         other: "%{count} photos by %{author}"
         two: "Two photos by %{author}"
         zero: "No photos by %{author}"
+  previous: "Sebelumnya"
+  privacy: "Privasi"
+  privacy_policy: "Kebijakan Privasi"
+  profile: "Profil"
   profiles:
     edit:
       your_tags: "You: in 5 #tags"
       your_tags_placeholder: "i.e. #diaspora #ironing #kittens #music"
+  public: "Umum"
   reactions:
     few: "%{count} reactions"
     many: "%{count} reactions"
@@ -332,6 +372,7 @@ id:
       reshare_confirmation: "Reshare %{author} - %{text}?"
       reshare_original: "Reshare orignial"
       show_original: "Show Original"
+  search: "Cari"
   services:
     destroy:
       success: "Successfully destroyed authentication."
@@ -341,6 +382,7 @@ id:
       logged_in_as: "telah masuk sebagai"
     inviter:
       click_link_to_accept_invitation: "Click this link to accept your invitation"
+  settings: "Pengaturan"
   shared:
     add_contact:
       create_request: "Find by Diaspora handle"
@@ -405,9 +447,11 @@ id:
     destroy:
       failure: "Failed to stop following: #%{name}"
       success: "Successfully stopped following: #%{name}"
+  terms_and_conditions: "Syarat dan Ketentuan"
   tokens:
     show:
       connecting_is_simple: "Connecting your Diaspora account is as simple as filling out two fields on your Cubbi.es account page."
+  undo: "Batalkan?"
   users:
     confirm_email:
       email_confirmed: "E-Mail %{email} activated"
@@ -425,8 +469,6 @@ id:
       new_password: "New Password"
       receive_email_notifications: "Receive email notificaions?"
       your_handle: "Your diaspora handle"
-    getting_started:
-      what_facebook_does: "to Diaspora. This will pull your name and photo, and enable cross-positng."
     update:
       email_notifications_changed: "Language Change Failed"
       language_changed: "Language Changed"
@@ -437,3 +479,4 @@ id:
       unconfirmed_email_not_changed: "E-Mail Change Failed"
   webfinger:
     hcard_fetch_failed: "there was a problem fetching the hcard for #{@account}"
+  welcome: "Selamat Datang!"

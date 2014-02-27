@@ -5,8 +5,6 @@
 class Profile < ActiveRecord::Base
   self.include_root_in_json = false
 
-  mount_uploader :wallpaper, WallpaperUploader
-
   include Diaspora::Federated::Base
   include Diaspora::Taggable
 
@@ -40,9 +38,6 @@ class Profile < ActiveRecord::Base
   validate :max_tags
   validate :valid_birthday
 
-  attr_accessible :first_name, :last_name, :image_url, :image_url_medium,
-    :image_url_small, :birthday, :gender, :bio, :location, :searchable, :date, :tag_string, :nsfw
-
   belongs_to :person
   before_validation do
     self.tag_string = self.tag_string.split[0..4].join(' ')
@@ -59,7 +54,8 @@ class Profile < ActiveRecord::Base
 
   def receive(user, person)
     Rails.logger.info("event=receive payload_type=profile sender=#{person} to=#{user}")
-    person.profile.update_attributes self.attributes.merge(:tag_string => self.tag_string)
+    profiles_attr = self.attributes.merge('tag_string' => self.tag_string).slice('diaspora_handle', 'first_name', 'last_name', 'image_url', 'image_url_small', 'image_url_medium', 'birthday', 'gender', 'bio', 'location', 'searchable', 'nsfw', 'tag_string')
+    person.profile.update_attributes(profiles_attr) 
 
     person.profile
   end
@@ -87,7 +83,7 @@ class Profile < ActiveRecord::Base
                'location' =>  'location',
                 }
 
-    update_hash = Hash[omniauth_user_hash.map {|k, v| [mappings[k], v] }]
+    update_hash = Hash[ omniauth_user_hash.map {|k, v| [mappings[k], v] } ]
     
     self.attributes.merge(update_hash){|key, old, new| old.blank? ? new : old}
   end
@@ -187,8 +183,6 @@ class Profile < ActiveRecord::Base
   end
 
   def absolutify_local_url url
-    pod_url = AppConfig[:pod_url].dup
-    pod_url.chop! if AppConfig[:pod_url][-1,1] == '/'
-    "#{pod_url}#{url}"
+    "#{AppConfig.pod_uri.to_s.chomp("/")}#{url}"
   end
 end

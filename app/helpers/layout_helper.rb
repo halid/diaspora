@@ -20,7 +20,7 @@ module LayoutHelper
   end
 
   def set_asset_host
-    path = ENV['ASSET_HOST'].to_s + '/assets/'
+    path = AppConfig.environment.assets.host.to_s + '/assets/'
     content_tag(:script) do
       <<-JS.html_safe
         if(window.app) app.baseImageUrl("#{path}")
@@ -33,16 +33,6 @@ module LayoutHelper
       <<-JS.html_safe
         Diaspora.I18n.loadLocale(#{get_javascript_strings_for(I18n.locale).to_json}, "#{I18n.locale}");
         Diaspora.Page = "#{params[:controller].camelcase}#{params[:action].camelcase}";
-      JS
-    end
-  end
-
-  def set_current_user_in_javascript
-    return unless user_signed_in?
-    user = UserPresenter.new(current_user).to_json
-    content_tag(:script) do
-      <<-JS.html_safe
-        window.current_user_attributes = #{user}
       JS
     end
   end
@@ -65,8 +55,8 @@ module LayoutHelper
   end
 
   def include_base_css_framework(use_bootstrap=false)
-    if use_bootstrap || @aspect == :getting_started || @page == :experimental
-      stylesheet_link_tag 'bootstrap-complete'
+    if use_bootstrap || @aspect == :getting_started
+      stylesheet_link_tag('bootstrap-complete')
     else
       stylesheet_link_tag 'blueprint', :media => 'screen'
     end

@@ -1,63 +1,29 @@
 app.Router = Backbone.Router.extend({
   routes: {
     //new hotness
-    "stream?ex=true:params": 'newStream',
-    "stream?ex=true": 'newStream',
-    "people/:id?ex=true": "newProfile",
-    "posts/new" : "composer",
     "posts/:id": "singlePost",
-    "posts/:id/next": "siblingPost",
-    "posts/:id/previous": "siblingPost",
     "p/:id": "singlePost",
-    "framer": "framer",
 
     //oldness
     "activity": "stream",
     "stream": "stream",
     "participate": "stream",
     "explore": "stream",
-    "aspects": "stream",
-    "aspects:query": "stream",
+    "aspects": "aspects",
+    "aspects/stream": "aspects_stream",
     "commented": "stream",
     "liked": "stream",
     "mentions": "stream",
-    "followed_tags": "stream",
-    "tags/:name": "stream",
+    "followed_tags": "followed_tags",
+    "tags/:name": "followed_tags",
     "people/:id/photos": "photos",
 
-    "people/:id": "profile",
-    "u/:name": "profile"
-  },
-
-  newStream : function() {
-    this.renderPage(function(){ return new app.pages.Stream()});
-  },
-
-  newProfile : function(personId) {
-    this.renderPage(function(){ return new app.pages.Profile({ personId : personId })});
-  },
-
-  composer : function(){
-    this.renderPage(function(){ return new app.pages.Composer()});
-  },
-
-  framer : function(){
-    this.renderPage(function(){ return new app.pages.Framer()});
+    "people/:id": "stream",
+    "u/:name": "stream"
   },
 
   singlePost : function(id) {
-    this.renderPage(function(){ return new app.pages.PostViewer({ id: id })});
-  },
-
-  siblingPost : function(){ //next or previous
-    var post = new app.models.Post();
-    post.bind("change", setPreloadAttributesAndNavigate)
-    post.fetch({url : window.location})
-
-    function setPreloadAttributesAndNavigate(){
-      window.preloads.post = post.attributes
-      app.router.navigate(post.url(), {trigger:true, replace: true})
-    }
+    this.renderPage(function(){ return new app.pages.SinglePostViewer({ id: id })});
   },
 
   renderPage : function(pageConstructor){
@@ -78,16 +44,63 @@ app.Router = Backbone.Router.extend({
 
     $("#main_stream").html(app.page.render().el);
     $('#selected_aspect_contacts .content').html(streamFacesView.render().el);
-  },
-
-  profile : function(page) {
-    this.stream()
+    this.hideInactiveStreamLists();
   },
 
   photos : function() {
     app.photos = new app.models.Stream([], {collection: app.collections.Photos});
     app.page = new app.views.Photos({model : app.photos});
     $("#main_stream").html(app.page.render().el);
-  }
+  },
+
+  followed_tags : function(name) {
+    this.stream();
+
+    app.tagFollowings = new app.collections.TagFollowings();
+    this.followedTagsView = new app.views.TagFollowingList({collection: app.tagFollowings});
+    $("#tags_list").replaceWith(this.followedTagsView.render().el);
+    this.followedTagsView.setupAutoSuggest();
+
+    app.tagFollowings.reset(gon.preloads.tagFollowings);
+
+    if(name) {
+      var followedTagsAction = new app.views.TagFollowingAction(
+            {tagText: decodeURIComponent(name).toLowerCase()}
+          );
+      $("#author_info").prepend(followedTagsAction.render().el)
+    }
+    this.hideInactiveStreamLists();
+  },
+
+  aspects : function(){
+    app.aspects = new app.collections.Aspects(app.currentUser.get('aspects'));
+    this.aspects_list =  new app.views.AspectsList({ collection: app.aspects });
+    this.aspects_list.render();
+    this.aspects_stream();
+  },
+
+  aspects_stream : function(){
+    var ids = app.aspects.selectedAspects('id');
+    app.stream = new app.models.StreamAspects([], { aspects_ids: ids });
+    app.stream.fetch();
+
+    app.page = new app.views.Stream({model : app.stream});
+    app.publisher = app.publisher || new app.views.Publisher({collection : app.stream.items});
+    app.publisher.setSelectedAspects(ids);
+
+    var streamFacesView = new app.views.StreamFaces({collection : app.stream.items});
+
+    $("#main_stream").html(app.page.render().el);
+    $('#selected_aspect_contacts .content').html(streamFacesView.render().el);
+    this.hideInactiveStreamLists();
+  },
+
+  hideInactiveStreamLists: function() {
+    if(this.aspects_list && Backbone.history.fragment != "aspects")
+      this.aspects_list.hideAspectsList();
+
+    if(this.followedTagsView && Backbone.history.fragment != "followed_tags")
+      this.followedTagsView.hideFollowedTags();
+  },
 });
 

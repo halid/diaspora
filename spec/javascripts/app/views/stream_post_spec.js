@@ -4,6 +4,20 @@ describe("app.views.StreamPost", function(){
   })
 
   describe("#render", function(){
+    var o_embed_cache = {
+      "data" : {
+        "html" : "some html"
+      }
+    };
+
+    var open_graph_cache = {
+      "url": "http://example.com/articles/123",
+      "title": "Example title",
+      "description": "Test description",
+      "image": "http://example.com/thumb.jpg",
+      "ob_type": "article"
+    };
+
     beforeEach(function(){
       loginAs({name: "alice", avatar : {small : "http://avatar.com/photo.jpg"}});
 
@@ -28,19 +42,19 @@ describe("app.views.StreamPost", function(){
 
     context("reshare", function(){
       it("displays a reshare count", function(){
-        this.statusMessage.set({reshares_count : 2})
+        this.statusMessage.set({ interactions: {reshares_count : 2 }});
         var view = new this.PostViewClass({model : this.statusMessage}).render();
 
-        expect($(view.el).html()).toContain(Diaspora.I18n.t('stream.reshares', {count: 2}))
-      })
+        expect($(view.el).html()).toContain(Diaspora.I18n.t('stream.reshares', {count: 2}));
+      });
 
       it("does not display a reshare count for 'zero'", function(){
-        this.statusMessage.set({reshares_count : 0})
+        this.statusMessage.interactions.set({ interactions: { reshares_count : 0}} );
         var view = new this.PostViewClass({model : this.statusMessage}).render();
 
-        expect($(view.el).html()).not.toContain("0 Reshares")
-      })
-    })
+        expect($(view.el).html()).not.toContain("0 Reshares");
+      });
+    });
 
     context("likes", function(){
       it("displays a like count", function(){
@@ -59,14 +73,28 @@ describe("app.views.StreamPost", function(){
 
     context("embed_html", function(){
       it("provides oembed html from the model response", function(){
-        this.statusMessage.set({"o_embed_cache" : {
-          "data" : {
-            "html" : "some html"
-          }
-        }})
+        this.statusMessage.set({"o_embed_cache" : o_embed_cache})
 
         var view = new app.views.StreamPost({model : this.statusMessage}).render();
-        expect(view.$el.html()).toContain("some html")
+        expect(view.$el.html()).toContain(o_embed_cache.data.html)
+      })
+    })
+
+    context("og_html", function(){
+      it("provides opengraph preview based on the model reponse", function(){
+        this.statusMessage.set({"open_graph_cache" : open_graph_cache});
+
+        var view = new app.views.StreamPost({model : this.statusMessage}).render();
+        expect(view.$el.html()).toContain(open_graph_cache.title)
+      });
+      it("does not provide opengraph preview, when oembed is available", function(){
+        this.statusMessage.set({
+          "o_embed_cache" : o_embed_cache,
+          "open_graph_cache" : open_graph_cache
+        });
+
+        var view = new app.views.StreamPost({model : this.statusMessage}).render();
+        expect(view.$el.html()).not.toContain(open_graph_cache.title)
       })
     })
 

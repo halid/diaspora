@@ -98,7 +98,7 @@ describe AspectsController do
     end
 
     it "doesn't overwrite random attributes" do
-      new_user = Factory :user
+      new_user = FactoryGirl.create :user
       params = {"name" => "Bruisers"}
       params[:user_id] = new_user.id
       put('update', :id => @alices_aspect_1.id, "aspect" => params)
@@ -118,11 +118,11 @@ describe AspectsController do
       eve.profile.save
       eve.save
 
-      @zed = Factory(:user_with_aspect, :username => "zed")
+      @zed = FactoryGirl.create(:user_with_aspect, :username => "zed")
       @zed.profile.first_name = "zed"
       @zed.profile.save
       @zed.save
-      @katz = Factory(:user_with_aspect, :username => "katz")
+      @katz = FactoryGirl.create(:user_with_aspect, :username => "katz")
       @katz.profile.first_name = "katz"
       @katz.profile.save
       @katz.save
@@ -172,25 +172,6 @@ describe AspectsController do
 
       get :toggle_contact_visibility, :format => 'js', :aspect_id => @alices_aspect_1.id
       @alices_aspect_1.reload.contacts_visible.should be_false
-    end
-  end
-
-  context 'helper methods' do
-    before do
-      @tag = ActsAsTaggableOn::Tag.create!(:name => "partytimeexcellent")
-      TagFollowing.create!(:tag => @tag, :user => alice)
-      alice.should_receive(:followed_tags).once.and_return([42])
-    end
-
-    describe 'tags' do
-      it 'queries current_users tag if there are tag_followings' do
-        @controller.tags.should == [42]
-      end
-
-      it 'does not query twice' do
-        @controller.tags.should == [42]
-        @controller.tags.should == [42]
-      end
     end
   end
 end

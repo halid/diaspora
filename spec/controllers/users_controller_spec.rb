@@ -7,8 +7,6 @@ require 'spec_helper'
 describe UsersController do
   before do
     @user = alice
-    @aspect = @user.aspects.first
-    @aspect1 = @user.aspects.create(:name => "super!!")
     sign_in :user, @user
     @controller.stub(:current_user).and_return(@user)
   end
@@ -41,13 +39,13 @@ describe UsersController do
 
   describe '#public' do
     it 'renders xml if atom is requested' do
-      sm = Factory(:status_message, :public => true, :author => @user.person)
+      sm = FactoryGirl.create(:status_message, :public => true, :author => @user.person)
       get :public, :username => @user.username, :format => :atom
-      response.body.should include(sm.text)
+      response.body.should include(sm.raw_message)
     end
 
     it 'renders xml if atom is requested with clickalbe urls' do
-      sm = Factory(:status_message, :public => true, :author => @user.person)
+      sm = FactoryGirl.create(:status_message, :public => true, :author => @user.person)
       @user.person.posts.each do |p|
         p.text = "Goto http://diasporaproject.org/ now!"
         p.save
@@ -56,10 +54,17 @@ describe UsersController do
       response.body.should include('a href')
     end
 
+    it 'includes reshares in the atom feed' do
+      reshare = FactoryGirl.create(:reshare, :author => @user.person)
+      get :public, :username => @user.username, :format => :atom
+      response.body.should include reshare.root.raw_message
+    end
+
     it 'redirects to a profile page if html is requested' do
       get :public, :username => @user.username
       response.should be_redirect
     end
+
     it 'redirects to a profile page if mobile is requested' do
       get :public, :username => @user.username, :format => :mobile
       response.should be_redirect
@@ -97,7 +102,7 @@ describe UsersController do
 
       it "uses devise's update with password" do
         @user.should_receive(:update_with_password).with(hash_including(@password_params))
-        @controller.stub!(:current_user).and_return(@user)
+        @controller.stub(:current_user).and_return(@user)
         put :update, :id => @user.id, :user => @password_params
       end
     end
@@ -116,8 +121,11 @@ describe UsersController do
     end
 
     describe 'email' do
-      before do
-        Resque.stub!(:enqueue)
+      it 'disallow the user to change his new (unconfirmed) mail when it is the same as the old' do
+        @user.email = "my@newemail.com"
+        put(:update, :id => @user.id, :user => { :email => "my@newemail.com"})
+        @user.reload
+        @user.unconfirmed_email.should eql(nil)
       end
 
       it 'allow the user to change his (unconfirmed) email' do
@@ -145,7 +153,7 @@ describe UsersController do
       end
 
       it 'sends out activation email on success' do
-        Resque.should_receive(:enqueue).with(Jobs::Mail::ConfirmEmail, @user.id).once
+        Workers::Mail::ConfirmEmail.should_receive(:perform_async).with(@user.id).once
         put(:update, :id => @user.id, :user => { :email => "my@newemail.com"})
       end
     end
@@ -164,6 +172,13 @@ describe UsersController do
         proc{
           put :update, par
         }.should change(@user.user_preferences, :count).by(-1)
+      end
+    end
+
+    describe 'getting started' do
+      it 'can be reenabled' do
+        put :update, user: {getting_started: true}
+        @user.reload.getting_started?.should be_true
       end
     end
   end
@@ -197,7 +212,7 @@ describe UsersController do
 
   describe '#destroy' do
     it 'does nothing if the password does not match' do
-      Resque.should_not_receive(:enqueue)
+      Workers::DeleteAccount.should_not_receive(:perform_async)
       delete :destroy, :user => { :current_password => "stuff" }
     end
 
@@ -207,10 +222,9 @@ describe UsersController do
     end
 
     it 'enqueues a delete job' do
-      Resque.should_receive(:enqueue).with(Jobs::DeleteAccount, anything)
+      Workers::DeleteAccount.should_receive(:perform_async).with(anything)
       delete :destroy, :user => { :current_password => "bluepin7" }
     end
-
   end
 
   describe '#confirm_email' do
@@ -251,27 +265,4 @@ describe UsersController do
       response.should be_success
     end
   end
-
-  # This logic lives in application controller
-  describe "#after_sign_in_path_for" do
-    before do
-      @controller.stub(:current_user).and_return(eve)
-    end
-
-    context 'getting started true on user' do
-      before do
-        eve.update_attribute(:getting_started, true)
-      end
-
-      it "redirects to getting started if the user has getting started set to true" do
-        @controller.after_sign_in_path_for(eve).should == getting_started_path
-      end
-
-      it "does not redirect to getting started if the user is beta" do
-        Role.add_beta(eve.person)
-        @controller.after_sign_in_path_for(eve).should == person_path(eve.person)
-      end
-    end
-  end
 end
-

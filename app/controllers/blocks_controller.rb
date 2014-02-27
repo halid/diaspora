@@ -4,7 +4,7 @@ class BlocksController < ApplicationController
   respond_to :html, :json
 
   def create
-    block = current_user.blocks.new(params[:block])
+    block = current_user.blocks.new(block_params)
 
     if block.save
       disconnect_if_contact(block.person)
@@ -32,11 +32,15 @@ class BlocksController < ApplicationController
     end
   end
 
-  protected
+  private
 
   def disconnect_if_contact(person)
     if contact = current_user.contact_for(person)
       current_user.disconnect(contact, :force => true)
     end
+  end
+
+  def block_params
+    params.require(:block).permit(:person_id)
   end
 end
